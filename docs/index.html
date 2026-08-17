@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LangSmith Field Notes — Support Lab</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --bg-elev: #171d25;
+      --bg-soft: #1e2630;
+      --line: #2a3441;
+      --text: #e8eef4;
+      --muted: #8b9aab;
+      --accent: #3d9cf0;
+      --accent-dim: rgba(61, 156, 240, 0.15);
+      --good: #3ecf8e;
+      --warn: #e6b84d;
+      --bad: #f07178;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+      --mono: "IBM Plex Mono", "SF Mono", ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: 100vh;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 28px 18px;
+      border-right: 1px solid var(--line);
+      background: var(--bg-elev);
+      overflow-y: auto;
+    }
+
+    nav .brand {
+      font-family: var(--serif);
+      font-size: 18px;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    nav .sub {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 28px;
+    }
+
+    nav a {
+      display: block;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    nav a:hover,
+    nav a.active {
+      background: var(--accent-dim);
+      color: var(--text);
+    }
+
+    main {
+      padding: 40px 48px 80px;
+      max-width: 920px;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: 40px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin: 0 0 12px;
+    }
+
+    h2 {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 600;
+      margin: 48px 0 16px;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 24px 0 8px;
+      letter-spacing: 0.01em;
+    }
+
+    p { color: var(--text); margin: 0 0 14px; }
+    .lede { color: var(--muted); font-size: 17px; max-width: 62ch; }
+
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 8px; }
+    .pill {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: var(--bg-soft);
+    }
+    .pill strong { color: var(--text); font-weight: 500; }
+
+    .card {
+      background: var(--bg-elev);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin: 14px 0;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 12px 0 20px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+    code, .mono { font-family: var(--mono); font-size: 12px; }
+    pre {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.45;
+      color: #c5d0dc;
+    }
+
+    /* Topology */
+    .topo {
+      display: grid;
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .layer {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      background: var(--bg-elev);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .layer:hover, .layer.active {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, var(--accent-dim), var(--bg-elev));
+    }
+    .layer .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .layer .nodes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .node-chip {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+    }
+    .layer-detail {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .layer.active .layer-detail { display: block; color: var(--text); }
+
+    .arrow {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    /* Workflow stepper */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 16px 0;
+    }
+    .step {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 12px;
+      padding: 12px 0;
+      border-left: none;
+      cursor: pointer;
+    }
+    .step-idx {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--bg-soft);
+    }
+    .step.active .step-idx {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #041018;
+      font-weight: 600;
+    }
+    .step-body {
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .step .blurb { display: none; color: var(--muted); font-size: 13px; margin-top: 6px; }
+    .step.active .blurb { display: block; }
+    .step-title { font-weight: 600; font-size: 14px; }
+
+    /* Glossary */
+    .search {
+      width: 100%;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font: inherit;
+      margin-bottom: 12px;
+    }
+    .term {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      background: var(--bg-elev);
+      cursor: pointer;
+    }
+    .term summary {
+      list-style: none;
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .term summary::-webkit-details-marker { display: none; }
+    .term summary::after { content: "+"; color: var(--muted); font-weight: 400; }
+    .term[open] summary::after { content: "–"; }
+    .term p { margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+    .term.hidden { display: none; }
+
+    /* Opinions */
+    .opinion {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0;
+      margin: 14px 0;
+      overflow: hidden;
+      background: var(--bg-elev);
+    }
+    .opinion > button {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      color: var(--text);
+      padding: 16px 18px;
+      font: inherit;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .opinion > button:hover { background: var(--bg-soft); }
+    .opinion .num {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .opinion .panel {
+      display: none;
+      padding: 0 18px 18px;
+      border-top: 1px solid var(--line);
+    }
+    .opinion.open .panel { display: block; }
+    .opinion .panel h4 {
+      margin: 16px 0 6px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .stance {
+      border-left: 3px solid var(--accent);
+      padding: 8px 12px;
+      background: var(--accent-dim);
+      border-radius: 0 8px 8px 0;
+      margin: 8px 0;
+    }
+
+    .callout {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 18px;
+      background: var(--bg-soft);
+      font-family: var(--serif);
+      font-size: 17px;
+      line-height: 1.45;
+      margin: 16px 0;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+    }
+    .up { color: var(--good); }
+    .same { color: var(--muted); }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+    .tabs button {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .tabs button.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    footer {
+      margin-top: 64px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 860px) {
+      .shell { grid-template-columns: 1fr; }
+      nav {
+        position: relative;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      main { padding: 28px 20px 60px; }
+      h1 { font-size: 30px; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav>
+      <div class="brand">LangSmith Field Notes</div>
+      <div class="sub">Support Lab · learning artifact</div>
+      <a href="#overview" class="active">Overview</a>
+      <a href="#topology">Topology</a>
+      <a href="#glossary">Glossary</a>
+      <a href="#workflows">Workflows</a>
+      <a href="#results">Experiment results</a>
+      <a href="#opinions">Design opinions</a>
+    </nav>
+
+    <main>
+      <section id="overview">
+        <h1>What we did, how it connects, what LangSmith should become</h1>
+        <p class="lede">
+          Field notes from building a LangGraph developer-support agent and running it through
+          LangSmith’s trace → dataset → evaluate → experiment loop — written so you can explain
+          the system and form a senior design opinion under pressure.
+        </p>
+        <div class="pill-row">
+          <span class="pill"><strong>Agent</strong> LangGraph support lab</span>
+          <span class="pill"><strong>Dataset</strong> support-agent-baseline-v1</span>
+          <span class="pill"><strong>Loop</strong> build → trace → eval → improve</span>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0">One-sentence summary</h3>
+          <p style="margin:0;color:var(--muted)">
+            We built an imperfect support agent, saved useful test questions with examples of the
+            expected behavior, scored agent versions with evaluators, fixed false-high confidence, and
+            proved the fix in a second experiment — while discovering that Playground experiments
+            test prompts, not our graph.
+          </p>
+        </div>
+      </section>
+
+      <section id="topology">
+        <h2>Topology</h2>
+        <p>Click a layer. Most confusion comes from mixing these up.</p>
+
+        <div class="topo" id="topo">
+          <div class="layer active" data-layer="a">
+            <div class="label">Layer A — System under test</div>
+            <div class="nodes">
+              <span class="node-chip">Your LangGraph agent</span>
+              <span class="node-chip">Chat UI / CLI</span>
+              <span class="node-chip">Playground prompt + model</span>
+            </div>
+            <div class="layer-detail">
+              Whoever <em>generates answers</em>. Your agent is code (routing, search, confidence).
+              Playground is a separate generator: system prompt + Claude. Same exam, different student.
+            </div>
+          </div>
+          <div class="arrow">↓ produces answers scored by ↓</div>
+          <div class="layer" data-layer="b">
+            <div class="label">Layer B — Test harness</div>
+            <div class="nodes">
+              <span class="node-chip">Dataset</span>
+              <span class="node-chip">Examples</span>
+              <span class="node-chip">Reference outputs</span>
+              <span class="node-chip">Evaluators</span>
+              <span class="node-chip">Experiments</span>
+            </div>
+            <div class="layer-detail">
+              Shared questions and definition of good. An experiment = one generator run over the
+              dataset with evaluators attached. SDK experiments and <span class="mono">pg::</span>
+              experiments both live here.
+            </div>
+          </div>
+          <div class="arrow">↓ inspected / iterated in ↓</div>
+          <div class="layer" data-layer="c">
+            <div class="label">Layer C — Observation surfaces</div>
+            <div class="nodes">
+              <span class="node-chip">Tracing</span>
+              <span class="node-chip">Studio</span>
+              <span class="node-chip">Annotation</span>
+              <span class="node-chip">Prompts / Hub</span>
+            </div>
+            <div class="layer-detail">
+              Where you debug and label. Studio for graph state. Tracing for one run. Annotation
+              for humans correcting expected answers. These don’t replace the test setup — they feed it.
+            </div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>Surface</th><th>Layer</th><th>Job</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Agent / chat / CLI</td><td>A</td><td>Produce support answers</td></tr>
+            <tr><td>Tracing</td><td>C</td><td>Inspect one run</td></tr>
+            <tr><td>Studio</td><td>C</td><td>Debug graph nodes &amp; state</td></tr>
+            <tr><td>Datasets</td><td>B</td><td>Save reusable test cases</td></tr>
+            <tr><td>Evaluators</td><td>B</td><td>Define “good”</td></tr>
+            <tr><td>Experiments</td><td>B</td><td>Compare versions</td></tr>
+            <tr><td>Playground</td><td>A+B</td><td>Iterate prompts over dataset</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="glossary">
+        <h2>Glossary</h2>
+        <input class="search" id="glossary-search" type="search" placeholder="Filter terms…" />
+        <div id="glossary-list"></div>
+      </section>
+
+      <section id="workflows">
+        <h2>Workflows</h2>
+        <div class="tabs" id="workflow-tabs">
+          <button class="active" data-tab="agent">Agent eval (SDK)</button>
+          <button data-tab="dataset">Trace → dataset</button>
+          <button data-tab="playground">Playground</button>
+        </div>
+
+        <div class="tab-panel active" id="tab-agent">
+          <div class="steps" data-steps>
+            <div class="step active">
+              <div class="step-idx">1</div>
+              <div class="step-body">
+                <div class="step-title">Save test questions and define the expected behavior</div>
+                <div class="blurb">For each question, describe what a good response should do. Do not automatically treat the agent’s last reply as correct.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-idx">2</div>
+              <div class="step-body">
+                <div class="step-title">Attach evaluators</div>
+                <div class="blurb">LLM-as-judge for message quality; code checks for clarify / confidence.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-idx">3</div>
+              <div class="step-body">
+                <div class="step-title">Run baseline via SDK</div>
+                <div class="blurb"><span class="mono">evaluate(target)</span> invokes your LangGraph agent over every example.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-idx">4</div>
+              <div class="step-body">
+                <div class="step-title">Change the agent</div>
+                <div class="blurb">We fixed confidence to use evidence relevance instead of source-type count.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-idx">5</div>
+              <div class="step-body">
+                <div class="step-title">Re-experiment &amp; compare</div>
+                <div class="blurb"><span class="mono">python scripts/run_experiment.py --prefix improved-confidence</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-dataset">
+          <pre>Interesting / failed trace
+  → Add to dataset          (save the question as a test case)
+  → Edit reference output   (describe the expected response)
+  → Optional annotation     (ask another person to review it)
+
+Trap: LangSmith may prefill reference with the agent reply.
+That is only a draft. Review it before treating it as the expected answer.</pre>
+        </div>
+
+        <div class="tab-panel" id="tab-playground">
+          <pre>Same dataset + evaluator
+  → Playground prompt + model (e.g. Claude)
+  → Experiment named pg::claude-sonnet-5::…
+  → Scores the prompt — not your LangGraph agent
+
+Use it to learn the product. Don’t confuse it with agent truth.</pre>
+        </div>
+      </section>
+
+      <section id="results">
+        <h2>Experiment results</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3 style="margin-top:0">Baseline → improved</h3>
+            <div class="metric"><span>clarification_match</span><span class="same">1.00 → 1.00</span></div>
+            <div class="metric"><span>confidence_calibration</span><span class="up">0.83 → 1.00</span></div>
+            <div class="metric"><span>required_facts</span><span class="up">0.83 → 0.92</span></div>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">Redis case (the smoking gun)</h3>
+            <p style="margin:0;color:var(--muted);font-size:13px">
+              Weak evidence still returned docs via keyword overlap. Old agent set
+              <span class="mono">confidence=high</span>. New agent sets
+              <span class="mono">confidence=low</span> and admits insufficient evidence.
+            </p>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Experiment</th><th>Generator</th><th>Meaning</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">baseline-current-agent-…</td>
+              <td>LangGraph agent v0</td>
+              <td>Pre-fix baseline</td>
+            </tr>
+            <tr>
+              <td class="mono">improved-confidence-…</td>
+              <td>LangGraph agent v1</td>
+              <td>Relevance-based confidence</td>
+            </tr>
+            <tr>
+              <td class="mono">pg::claude-sonnet-5::…</td>
+              <td>Playground Claude</td>
+              <td>Prompt-only; not the agent</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="opinions">
+        <h2>Design opinions for LangSmith’s future</h2>
+        <p>
+          Formed while learning — stated with the confidence of a senior designer:
+          observation → stance → product implication.
+        </p>
+        <div id="opinions-list"></div>
+      </section>
+
+      <footer>
+        Companion to <span class="mono">docs/langsmith-field-notes.md</span> · open <span class="mono">docs/index.html</span> · LangGraph Support Lab
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    const terms = [
+      ["Trace / run", "One execution record: inputs, outputs, nested spans, timing, cost."],
+      ["Thread", "Multi-turn conversation sharing state via thread_id."],
+      ["Dataset", "Reusable set of examples — the exam questions."],
+      ["Example", "One test case: input + optional reference output."],
+      ["Input", "What we feed the system. For us: question."],
+      ["Reference output", "What a good response should say or do. It is not automatically whatever the agent said in the original run."],
+      ["Output schema", "Shape of labels/outputs for validation — not 'agent must reply in JSON'."],
+      ["Evaluator", "Code or LLM judge that scores an output against criteria/reference."],
+      ["Experiment", "One generator run over a dataset with scores collected."],
+      ["Baseline", "First experiment before a change, used for comparison."],
+      ["SDK evaluate", "Code path that runs your real agent as the generator."],
+      ["Playground experiment (pg::)", "Same harness; answers come from Playground prompt + model."],
+      ["Annotation", "Human review to create or correct labels."],
+      ["LLM-as-judge", "Another model grades message quality with a rubric."],
+      ["Code evaluator", "Deterministic check (clarify?, confidence != high, facts present)."],
+    ];
+
+    const glossary = document.getElementById("glossary-list");
+    terms.forEach(([name, def]) => {
+      const el = document.createElement("details");
+      el.className = "term";
+      el.dataset.name = name.toLowerCase();
+      el.innerHTML = `<summary>${name}</summary><p>${def}</p>`;
+      glossary.appendChild(el);
+    });
+
+    document.getElementById("glossary-search").addEventListener("input", (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      [...glossary.children].forEach((el) => {
+        el.classList.toggle("hidden", q && !el.dataset.name.includes(q));
+      });
+    });
+
+    // Topology
+    document.querySelectorAll(".layer").forEach((layer) => {
+      layer.addEventListener("click", () => {
+        document.querySelectorAll(".layer").forEach((l) => l.classList.remove("active"));
+        layer.classList.add("active");
+      });
+    });
+
+    // Workflow tabs
+    document.querySelectorAll("#workflow-tabs button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#workflow-tabs button").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    // Steps
+    document.querySelectorAll("[data-steps] .step").forEach((step) => {
+      step.addEventListener("click", () => {
+        step.parentElement.querySelectorAll(".step").forEach((s) => s.classList.remove("active"));
+        step.classList.add("active");
+      });
+    });
+
+    // Opinions
+    const opinions = [
+      {
+        title: "Separate prompt apps from agent systems in the primary IA",
+        observation: "Playground Evaluate Mode reuses dataset/experiment objects but swaps in a generic model+prompt — so it felt like it should run our agent until it didn’t.",
+        stance: "Ask early and keep visible: what generates answers — prompt, graph, SDK, or deployment?",
+        future: "Experiment = {generator, dataset, evaluators} with generator type as a first-class badge, not a buried pg:: prefix.",
+      },
+      {
+        title: "Adding a trace should save the test case, not assume the answer is correct",
+        observation: "Prefilling reference output with the agent reply teaches “datasets are correct answers.” We had to unlearn that.",
+        stance: "Failed traces should save the question while clearly marking the expected answer as unfinished, or send it to someone for review.",
+        future: "Offer explicit choices: Save question for later review vs Save question with an approved expected answer.",
+      },
+      {
+        title: "Make causality the unit of debugging",
+        observation: "Traces show steps; the hard job is where quality first diverged. Our bug was confidence policy, not a missing node.",
+        stance: "Observability wins when it explains why the user-facing answer is wrong.",
+        future: "Link evaluator failures to responsible state fields (e.g. confidence + evidence relevance) with a lightweight failure taxonomy.",
+      },
+      {
+        title: "Role-aware loops for builders vs reviewers vs PMs",
+        observation: "Without deep LangChain expertise we could still judge clarification and confidence honesty — not every technical diagnosis.",
+        stance: "Annotation/eval is a cross-functional workflow, not an engineer-only afterthought.",
+        future: "Reviewer UI: question, evidence used, proposed answer, clear review criteria, and one-click approval — less JSON, more judgment.",
+      },
+      {
+        title: "Continuous improvement should feel like one product story",
+        observation: "Studio, Playground, Datasets, Evaluators, Hub, Deployments are powerful but easy to experience as islands.",
+        stance: "High-growth agent platforms win on lifecycle coherence, not surface count.",
+        future: "A single Improve spine: failure → case → label → eval → experiment → ship → monitor, always showing where you are.",
+      },
+    ];
+
+    const opinionRoot = document.getElementById("opinions-list");
+    opinions.forEach((op, i) => {
+      const wrap = document.createElement("div");
+      wrap.className = "opinion" + (i === 0 ? " open" : "");
+      wrap.innerHTML = `
+        <button type="button">
+          <div>
+            <div class="num">0${i + 1}</div>
+            <div>${op.title}</div>
+          </div>
+          <span style="color:var(--muted)">▾</span>
+        </button>
+        <div class="panel">
+          <h4>Observation</h4>
+          <p>${op.observation}</p>
+          <h4>Stance</h4>
+          <div class="stance">${op.stance}</div>
+          <h4>Product future</h4>
+          <p>${op.future}</p>
+        </div>`;
+      wrap.querySelector("button").addEventListener("click", () => {
+        const open = wrap.classList.contains("open");
+        [...opinionRoot.children].forEach((c) => c.classList.remove("open"));
+        if (!open) wrap.classList.add("open");
+      });
+      opinionRoot.appendChild(wrap);
+    });
+
+    // Active nav
+    const links = [...document.querySelectorAll("nav a")];
+    const sections = links.map((a) => document.querySelector(a.getAttribute("href")));
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const id = "#" + entry.target.id;
+          links.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === id));
+        });
+      },
+      { rootMargin: "-40% 0px -50% 0px", threshold: 0 }
+    );
+    sections.forEach((s) => s && io.observe(s));
+  </script>
+</body>
+</html>

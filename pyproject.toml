@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "langgraph-support-lab"
+version = "0.1.0"
+description = "A LangGraph developer-support agent for studying the LangSmith lifecycle."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "langchain",
+    "langgraph",
+    "langsmith",
+    "python-dotenv",
+    "rich",
+]
+
+[project.optional-dependencies]
+anthropic = ["langchain-anthropic"]
+openai = ["langchain-openai"]
+dev = ["langgraph-cli[inmem]", "pytest", "ruff"]
+
+[project.scripts]
+support-lab = "langgraph_support_lab.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
