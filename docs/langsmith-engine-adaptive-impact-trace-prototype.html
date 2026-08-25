@@ -176,7 +176,8 @@
     .section-note { color: var(--muted); font-size: 10px; }
 
     .impact-card {
-      overflow: hidden;
+      position: relative;
+      overflow: visible;
       border: 1px solid var(--line);
       border-radius: 6px;
       background: #fff;
@@ -931,21 +932,22 @@
     .rail-icon:hover { background: #eef2f7; }
     .rail-logo { margin-bottom: 8px; background: #0f172a; color: #fff; font-size: 9px; font-weight: 700; }
     .app-main { min-width: 0; flex: 1; margin-left: 44px; transition: margin-left 200ms ease-out; }
-    .product-header { position: sticky; top: 0; z-index: 30; height: 136px; overflow: hidden; border-bottom: 1px solid var(--border-subtle); background: rgba(255,255,255,.98); backdrop-filter: blur(8px); }
+    .product-header { position: sticky; top: 0; z-index: 30; height: 132px; overflow: hidden; border-bottom: 1px solid var(--border-subtle); background: rgba(255,255,255,.98); backdrop-filter: blur(8px); }
     .breadcrumbs-row { display: flex; height: 52px; align-items: center; padding: 4px 16px 0; color: var(--text-quaternary); font-size: 12px; font-weight: 500; }
     .crumb-separator { display: inline-flex; width: 26px; height: 10px; align-items: center; justify-content: center; margin: 0 1px; opacity: .55; }
     .crumb-separator .inline-svg { width: 10px; height: 10px; }
-    .breadcrumb-project-icon { width: 12px; height: 12px; margin-right: 6px; }
+    .breadcrumb-project-icon { width: 12px; height: 12px; margin-right: 6px; color: var(--text-primary); }
+    .breadcrumb-current { color: var(--text-primary); }
     .project-row { display: flex; height: 24px; align-items: center; justify-content: space-between; padding: 0 16px; }
     .project-name { display: flex; height: 24px; align-items: center; gap: 6px; color: var(--text-primary); font-size: 16px; font-weight: 600; letter-spacing: -.04em; }
     .project-name > .inline-svg { width: 16px; height: 16px; }
     .id-chip { display: inline-flex; height: 24px; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; background: #f6f8fb; color: #64758b; font: 12px/1.5 var(--mono); }
     .id-chip .inline-svg { width: 14px; height: 14px; }
-    .product-tabs { display: flex; height: 60px; align-items: flex-start; gap: 24px; padding: 16px 16px 0; }
-    .product-tab { height: 44px; padding: 0 0 23px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-tertiary); font-size: 14px; font-weight: 400; letter-spacing: -.04em; }
+    .product-tabs { display: flex; height: 56px; align-items: flex-start; gap: 24px; padding: 12px 16px 0; }
+    .product-tab { display: inline-flex; height: 44px; align-items: center; justify-content: center; padding: 0; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-tertiary); font-size: 14px; font-weight: 400; letter-spacing: -.04em; }
     .product-tab.active { border-color: var(--text-primary); color: var(--text-primary); }
     .product-tab:hover { color: var(--text-primary); }
-    .tab-count { margin-left: 6px; padding: 2px 4px; border-radius: 3px; background: #e5f4ff; color: #0d3d77; font-size: 12px; }
+    .tab-count { display: inline-flex; height: 18px; align-items: center; justify-content: center; margin-left: 6px; padding: 0 4px; border-radius: 3px; background: #e5f4ff; color: #0d3d77; font-size: 12px; line-height: 1; vertical-align: middle; }
     .project-actions { display: flex; gap: 8px; align-items: center; }
     .chrome-button { display: inline-flex; height: 24px; align-items: center; gap: 4px; padding: 4px 8px; border: 1px solid var(--border-subtle); border-radius: 4px; background: #fff; box-shadow: var(--shadow-xs); color: var(--text-secondary); font-size: 13px; font-weight: 500; }
     .chrome-button.icon-only { width: 24px; justify-content: center; padding: 4px; }
@@ -954,7 +956,7 @@
     .chrome-button:hover { background: #fafbfd; }
     .chrome-button.primary:hover { border-color: transparent; background: #1566b8; }
     .workspace-body { display: grid; width: 100%; grid-template-columns: 357px minmax(0, 1079px); justify-content: start; }
-    .issues-sidebar { position: sticky; top: 136px; display: flex; height: calc(100vh - 136px); min-height: 0; flex-direction: column; overflow: hidden; border-right: 1px solid var(--border-subtle); background: #fff; padding: 16px; }
+    .issues-sidebar { position: sticky; top: 132px; display: flex; height: calc(100vh - 132px); min-height: 0; flex-direction: column; overflow: hidden; border-right: 1px solid var(--border-subtle); background: #fff; padding: 16px; }
     .issues-sidebar-head { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .issues-title { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; }
     .issues-title span { color: var(--text-quaternary); }
@@ -1023,11 +1025,14 @@
     .bar { border-radius: 4px; background: #4499f7; }
     .bar-tooltip { bottom: calc(var(--bar-height) + 4px); min-width: 32px; width: 32px; padding: 4px; font-size: 11px; line-height: 14px; }
     .chart-event { position: absolute; top: 0; bottom: auto; left: 50%; z-index: 3; width: 1px; height: 87px; border-left: 1px dashed #667085; pointer-events: none; }
-    .chart-event-icon { position: absolute; top: 89px; left: -8px; display: grid; width: 16px; height: 16px; place-items: center; padding: 2.46px; border: 0; border-radius: 50%; background: #4499f7; box-shadow: var(--shadow-xs); color: #fff; pointer-events: none; }
+    .chart-event-icon { position: absolute; top: 89px; left: -8px; display: flex; width: 16px; height: 16px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; background: #4499f7; box-shadow: var(--shadow-xs); color: #fff; pointer-events: none; }
     .chart-event-icon .inline-svg { width: 11.08px; height: 11.08px; }
+    .chart-event-icon .inline-svg path[fill]:not([fill="none"]) { fill: #fff !important; }
+    .chart-event-icon .inline-svg path[stroke]:not([stroke="none"]) { stroke: #fff !important; }
     .chart-event-icon.interactive { pointer-events: auto; cursor: pointer; }
     .chart-event-icon.interactive::after { position: absolute; top: -14px; left: 100%; width: 12px; height: 44px; content: ""; }
-    .chart-event-popover { position: absolute; top: -5px; left: 12px; z-index: 5; display: flex; visibility: hidden; width: 300px; min-height: 96px; flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; transform: translateY(4px); border: 0; border-radius: 8px; opacity: 0; background: #fff; box-shadow: 0 0 0 1px rgba(16,24,40,.06), 0 12px 16px -4px rgba(16,24,40,.08), 0 4px 6px -2px rgba(16,24,40,.03); filter: blur(0); color: var(--text-primary); font-size: 13px; pointer-events: none; transition: opacity 140ms ease-out, transform 140ms ease-out, visibility 0s linear 140ms; }
+    .chart-event-popover { position: absolute; right: auto; bottom: -2px; left: 12px; z-index: 5; display: flex; visibility: hidden; width: 300px; min-height: 96px; flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; transform: translateY(4px); border: 0; border-radius: 8px; opacity: 0; background: #fff; box-shadow: 0 0 0 1px rgba(16,24,40,.06), 0 12px 16px -4px rgba(16,24,40,.08), 0 4px 6px -2px rgba(16,24,40,.03); filter: blur(0); color: var(--text-primary); font-size: 13px; pointer-events: none; transition: opacity 140ms ease-out, transform 140ms ease-out, visibility 0s linear 140ms; }
+    .chart-event.open-left .chart-event-popover { right: 12px; left: auto; }
     .chart-event:hover, .chart-event:focus-within, .chart-event.open, .chart-event.hover-open { z-index: 20; }
     .chart-event-icon.interactive:hover + .chart-event-popover, .chart-event:focus-within .chart-event-popover, .chart-event-popover:hover, .chart-event.open .chart-event-popover, .chart-event.hover-open .chart-event-popover { visibility: visible; transform: translateY(0); opacity: 1; filter: blur(0); pointer-events: auto; transition-delay: 0s; }
     .chart-event.is-exiting .chart-event-popover { visibility: visible; transform: translateY(0); opacity: 0; filter: blur(4px); pointer-events: none; transition: opacity 120ms ease-out, filter 120ms ease-out; }
@@ -1035,14 +1040,17 @@
     .bar-slot:has(.chart-event-icon.interactive:hover) .bar-tooltip, .bar-slot:has(.chart-event:focus-within) .bar-tooltip, .bar-slot:has(.chart-event-popover:hover) .bar-tooltip, .bar-slot:has(.chart-event.open) .bar-tooltip, .bar-slot:has(.chart-event.hover-open) .bar-tooltip { visibility: hidden; }
     .chart-event-popover-head { display: flex; width: 100%; align-items: center; justify-content: space-between; }
     .chart-event-popover-title { display: inline-flex; align-items: center; gap: 5px; color: #000; font-size: 14px; font-weight: 500; line-height: 1.5; letter-spacing: -.04em; white-space: nowrap; }
-    .deployment-popover-icon { display: grid; width: 16px; height: 16px; place-items: center; padding: 2.46px; border-radius: 50%; background: #4499f7; box-shadow: var(--shadow-xs); color: #fff; }
+    .deployment-popover-icon { display: flex; width: 16px; height: 16px; flex: 0 0 16px; align-items: center; justify-content: center; padding: 0; border-radius: 50%; background: #4499f7; box-shadow: var(--shadow-xs); color: #fff; }
     .deployment-popover-icon .inline-svg { width: 11.08px; height: 11.08px; }
+    .deployment-popover-icon .inline-svg path[fill]:not([fill="none"]) { fill: #fff !important; }
+    .deployment-popover-icon .inline-svg path[stroke]:not([stroke="none"]) { stroke: #fff !important; }
     .chart-event-popover-time { color: var(--text-quaternary); font-size: 13px; font-weight: 400; line-height: 1.5; letter-spacing: -.04em; white-space: nowrap; }
+    .chart-event-popover.time-in-detail .chart-event-popover-time { display: inline; }
+    .chart-event-popover-divider { margin: 0 9px; color: var(--border-default); }
     .chart-event-popover p { width: 100%; margin: 0; color: var(--text-quaternary); font-size: 13px; line-height: 18px; letter-spacing: -.04em; }
     .chart-event-popover .chrome-button { height: 24px; }
-    @container (max-width: 850px) {
-      .chart-event.late .chart-event-popover { right: auto; left: 12px; }
-    }
+    .chart-event-popover .chrome-button .inline-svg path { stroke: var(--text-quaternary) !important; }
+    .chart-event-popover .chrome-button .inline-svg path[fill]:not([fill="none"]) { fill: var(--text-quaternary) !important; }
     .bar-slot:nth-child(odd)::after { position: absolute; top: 114px; left: 50%; transform: translateX(-50%); color: var(--text-tertiary); font-size: 9px; line-height: 11px; white-space: nowrap; }
     .bar-slot:nth-child(1)::after { content: "Sun Jun 7"; } .bar-slot:nth-child(3)::after { content: "Tue Jun 9"; }
     .bar-slot:nth-child(5)::after { content: "Thu Jun 11"; } .bar-slot:nth-child(7)::after { content: "Sat Jun 13"; }
@@ -1303,7 +1311,7 @@
         <button class="rail-icon"><img src="./assets/engine-opportunity-prototype/icon-codepen.svg" alt=""></button>
         <button class="rail-icon"><img src="./assets/engine-opportunity-prototype/icon-search.svg" alt=""></button>
         <button class="rail-icon"><img src="./assets/engine-opportunity-prototype/icon-home.svg" alt=""></button>
-        <button class="rail-icon active"><img src="./assets/engine-opportunity-prototype/icon-dataflow-trace.svg" alt=""></button>
+        <button class="rail-icon active"><img src="./assets/engine-opportunity-prototype/icon-branch.svg" alt=""></button>
         <button class="rail-icon"><img src="./assets/engine-opportunity-prototype/icon-chart.svg" alt=""></button>
         <button class="rail-icon"><img src="./assets/engine-opportunity-prototype/icon-database.svg" alt=""></button>
         <button class="rail-icon"><img src="./assets/engine-opportunity-prototype/icon-scales.svg" alt=""></button>
@@ -1368,7 +1376,7 @@
           <span>Tracing</span>
           <span class="crumb-separator"><img src="./assets/engine-opportunity-prototype/icon-breadcrumb.svg" alt=""></span>
           <img class="breadcrumb-project-icon" src="./assets/engine-opportunity-prototype/icon-project-small.svg" alt="">
-          <span>langgraph-support-lab</span>
+          <span class="breadcrumb-current">langgraph-support-lab</span>
         </div>
         <div class="project-row">
           <div class="project-name"><img src="./assets/engine-opportunity-prototype/icon-project.svg" alt=""> <span>langgraph-support-lab</span> <span class="id-chip">ID <img src="./assets/engine-opportunity-prototype/icon-id-link.svg" alt=""></span></div>
@@ -2375,19 +2383,19 @@
       document.getElementById("chart-unit").textContent = `${unit} · Total ${total}${activeIssue === "prompt" ? " · Dark bar: v43 deployed" : ""}`;
       const chartEventsByIssue = {
         auth: {
-          6: { title:"Auth config updated", time:"Jun 13 · 7:06 AM", detail:"Access-token TTL: 90m → 60m", action:"View config", marker:"icon-config-marker-figma.svg", actionIcon:"icon-settings.svg" },
+          6: { title:"Auth config updated", time:"Jun 13 · 7:06 AM", detail:"Access-token TTL: 90m → 60m", action:"View config", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
           14: { title:"Production deployment", time:"Jun 21 · 3:42 PM", detail:"PR #172 · Centralize account API client", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
         },
         hallucination: {
-          4: { title:"Policy index updated", time:"Jun 11 · 9:18 AM", detail:"Refund-policy corpus reindexed · 14 documents", action:"View index", marker:"icon-config-marker-figma.svg", actionIcon:"icon-database.svg" },
+          4: { title:"Knowledge index synced", time:"Jun 11 · 9:18 AM", detail:"Refund-policy corpus reindexed · 14 documents", action:"View change", marker:"icon-database.svg", actionIcon:"icon-database.svg" },
           15: { title:"Prompt deployed", time:"Jun 22 · 1:24 PM", detail:"refund-policy-rag · prompt v18", action:"View prompt", marker:"icon-run-prompt.svg", actionIcon:"icon-message.svg" }
         },
         looping: {
-          7: { title:"Agent config updated", time:"Jun 14 · 11:32 AM", detail:"Max iterations: 3 → 8", action:"View config", marker:"icon-config-marker-figma.svg", actionIcon:"icon-settings.svg" },
+          7: { title:"Agent iteration limit changed", time:"Jun 14 · 11:32 AM", detail:"Max iterations: 3 → 8", action:"View change", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
           16: { title:"Graph deployed", time:"Jun 23 · 10:08 AM", detail:"PR #181 · Inventory retry routing", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
         },
         latency: {
-          3: { title:"Context limit updated", time:"Jun 10 · 2:16 PM", detail:"Conversation history: 12 → 50 turns", action:"View config", marker:"icon-config-marker-figma.svg", actionIcon:"icon-settings.svg" },
+          3: { title:"Conversation history limit changed", time:"Jun 10 · 2:16 PM", detail:"Included history: 12 → 50 turns", action:"View change", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
           13: { title:"Retriever deployed", time:"Jun 20 · 4:05 PM", detail:"PR #187 · Expanded migration-source search", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
         },
         prompt: {
@@ -2395,11 +2403,11 @@
           12: { title:"Prompt v43 deployed", time:"Jun 19 · 12:12 PM", detail:"upgrade-support-agent · production", action:"View deployment", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-deployment-code-figma.svg" }
         },
         wrongTool: {
-          8: { title:"Tool schema updated", time:"Jun 15 · 3:09 PM", detail:"cancel_subscription description simplified", action:"View schema", marker:"icon-run-tool.svg", actionIcon:"icon-tool.svg" },
+          8: { title:"Tool description changed", time:"Jun 15 · 3:09 PM", detail:"PR #188 · cancel_subscription schema guidance removed", action:"View PR", marker:"icon-run-tool.svg", actionIcon:"icon-pr-popover-figma.svg" },
           17: { title:"Agent deployed", time:"Jun 24 · 2:38 PM", detail:"PR #189 · Subscription tool cleanup", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
         },
         guardrail: {
-          4: { title:"Policy timeout updated", time:"Jun 11 · 6:52 AM", detail:"Authorization timeout: 5s → 3s", action:"View config", marker:"icon-config-marker-figma.svg", actionIcon:"icon-settings.svg" },
+          4: { title:"Authorization timeout changed", time:"Jun 11 · 6:52 AM", detail:"Policy decision timeout: 5s → 3s", action:"View change", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
           11: { title:"Policy client deployed", time:"Jun 18 · 5:17 PM", detail:"PR #190 · Async authorization client", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
         }
       };
@@ -2425,6 +2433,19 @@
           ${renderChartEvent(index)}
         </div>
       `).join("");
+      document.querySelectorAll(".chart-event-popover").forEach(popover => {
+        const head = popover.querySelector(".chart-event-popover-head");
+        const title = popover.querySelector(".chart-event-popover-title");
+        const time = popover.querySelector(".chart-event-popover-time");
+        if (title.scrollWidth + time.scrollWidth + 8 > head.clientWidth) {
+          popover.classList.add("time-in-detail");
+          const divider = document.createElement("span");
+          divider.className = "chart-event-popover-divider";
+          divider.setAttribute("aria-hidden", "true");
+          divider.textContent = "|";
+          popover.querySelector("p").prepend(time, divider);
+        }
+      });
       const breakdown = document.getElementById("impact-breakdown");
       if (activeIssue === "auth") {
         const authBreakdowns = {
@@ -2439,8 +2460,17 @@
       }
       document.querySelectorAll(".chart-event-icon.interactive").forEach(icon => {
         const eventNode = icon.closest(".chart-event");
+        const popover = eventNode.querySelector(".chart-event-popover");
         let closeTimer = null;
         let exitTimer = null;
+        const positionPopover = () => {
+          eventNode.classList.remove("open-left");
+          const iconRect = icon.getBoundingClientRect();
+          const requiredRight = iconRect.right + 12 + popover.offsetWidth;
+          if (requiredRight > document.documentElement.clientWidth - 12) {
+            eventNode.classList.add("open-left");
+          }
+        };
         const finishExit = () => {
           eventNode.classList.remove("is-exiting");
           exitTimer = null;
@@ -2453,6 +2483,7 @@
           exitTimer = setTimeout(finishExit, 130);
         };
         const keepOpen = () => {
+          positionPopover();
           clearTimeout(closeTimer);
           clearTimeout(exitTimer);
           eventNode.classList.remove("is-exiting");
@@ -2467,6 +2498,7 @@
         };
         icon.onclick = event => {
           event.stopPropagation();
+          positionPopover();
           document.querySelectorAll(".chart-event.open").forEach(node => {
             if (node !== eventNode) node.classList.remove("open");
           });
@@ -2847,6 +2879,9 @@
         }
       };
       const behavior = behaviorByIssue[activeIssue];
+      const contextHubEligible = ["hallucination", "prompt"].includes(activeIssue);
+      const requestedContextHubSetup = ["agents", "skills"].includes(activeSetup);
+      const effectiveSetup = requestedContextHubSetup && !contextHubEligible ? "no-github" : activeSetup;
       const actionCopyByIssue = {
         auth: { fix: "Refresh credentials, retry once, and report failures.", track: "Flag silent authentication failures." },
         hallucination: { fix: "Ground policy claims in retrieved evidence.", track: "Flag unsupported policy claims." },
@@ -2857,9 +2892,9 @@
         guardrail: { fix: "Block access when authorization is unavailable.", track: "Flag access without authorization." }
       };
       const actionCopy = actionCopyByIssue[activeIssue];
-      const fixType = activeSetup === "agents"
+      const fixType = effectiveSetup === "agents"
         ? "agent"
-        : activeSetup === "skills"
+        : effectiveSetup === "skills"
           ? "skill"
           : usesPrompt
             ? "prompt"
@@ -2867,12 +2902,12 @@
       const fixPresentation = {
         code: {
           title: "Review Proposed Fix",
-          label: activeSetup === "no-github" ? "Apply Changes" : "Open PR",
+          label: effectiveSetup === "no-github" ? "Apply Changes" : "Open PR",
           icon: "icon-pr.svg"
         },
         prompt: { title: "Review Prompt Fix", label: "Apply Changes", icon: "icon-message.svg" },
-        agent: { title: "Review AGENTS.md Fix", label: "Apply Changes", icon: "icon-action-agent.svg" },
-        skill: { title: "Review Skill Fix", label: "Apply Changes", icon: "icon-action-skill.svg" }
+        agent: { title: "Review AGENTS.md Fix", label: "View in Context Hub", icon: "icon-action-agent.svg" },
+        skill: { title: "Review Skill Fix", label: "View in Context Hub", icon: "icon-action-skill.svg" }
       }[fixType];
       document.body.dataset.setup = activeSetup;
       document.getElementById("fix-action-title").textContent = fixPresentation.title;
@@ -3207,7 +3242,7 @@
       const evaluatorResults = experimentRuns * 3;
 
       const panels = {
-        fix: fixBySetup[activeSetup],
+        fix: fixBySetup[effectiveSetup],
         evaluator: `<div class="artifact-summary">Runs once per root trace. Scores <span class="mono inline-code">${escapeHtml(behavior.key)} = 1</span> when ${formatParagraphCode(behavior.condition)}. Future matches update this Engine issue; this evaluator does not validate the patch by itself.</div>
           <div class="evaluator-block">
             <div class="evaluator-head"><img src="./assets/engine-opportunity-prototype/icon-scales-evaluator.svg" alt=""><span>${escapeHtml(behavior.key)}</span></div>
