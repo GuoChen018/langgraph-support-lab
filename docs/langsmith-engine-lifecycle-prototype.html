@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LangSmith Engine — Issue Lifecycle Prototype</title>
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --panel: #ffffff;
+      --soft: #f7f7f5;
+      --soft-strong: #ececea;
+      --line: #d8d8d3;
+      --line-strong: #ababA5;
+      --text: #1b1b1a;
+      --muted: #666661;
+      --quiet: #898984;
+      --dark: #282827;
+      --sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    button, input { font: inherit; }
+
+    .app-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 58px;
+      padding: 10px 22px;
+      border-bottom: 1px solid var(--line);
+      background: white;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 750;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      color: white;
+      background: var(--dark);
+      font-size: 11px;
+    }
+
+    .prototype {
+      color: var(--quiet);
+      font-size: 12px;
+    }
+
+    .model-note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 13px 22px;
+      border-bottom: 1px solid var(--line);
+      background: var(--soft);
+    }
+
+    .model-note strong { margin-right: 7px; }
+
+    .status-key {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 220px 390px minmax(0, 1fr);
+      min-height: calc(100vh - 105px);
+    }
+
+    .sidebar,
+    .issue-column {
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .sidebar { padding: 20px 14px; }
+
+    .nav-heading {
+      margin: 18px 10px 7px;
+      color: var(--quiet);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .nav-heading:first-child { margin-top: 0; }
+
+    .nav-button {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 3px;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 7px;
+      color: var(--muted);
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .nav-button:hover { color: var(--text); background: var(--soft); }
+    .nav-button[aria-selected="true"] { color: var(--text); background: var(--soft-strong); font-weight: 700; }
+
+    .count {
+      min-width: 23px;
+      padding: 1px 6px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--quiet);
+      background: white;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .sidebar-explainer {
+      margin: 22px 9px 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      background: var(--soft);
+      font-size: 12px;
+    }
+
+    .issue-column { overflow: hidden; }
+
+    .column-header {
+      padding: 19px 18px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .column-header h1 {
+      margin: 0 0 3px;
+      font-size: 19px;
+      letter-spacing: -0.025em;
+    }
+
+    .issue-list {
+      max-height: calc(100vh - 170px);
+      overflow-y: auto;
+    }
+
+    .issue-item {
+      display: block;
+      width: 100%;
+      padding: 15px 18px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      color: inherit;
+      background: white;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .issue-item:hover { background: var(--soft); }
+    .issue-item[aria-selected="true"] {
+      box-shadow: inset 3px 0 0 var(--dark);
+      background: var(--soft-strong);
+    }
+
+    .issue-title {
+      margin-bottom: 7px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 2px 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--soft);
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .pill.dark {
+      border-color: var(--dark);
+      color: white;
+      background: var(--dark);
+    }
+
+    .pill.attention {
+      border-color: var(--line-strong);
+      color: var(--text);
+      background: white;
+    }
+
+    .detail {
+      min-width: 0;
+      padding: 27px 30px 70px;
+      overflow-y: auto;
+    }
+
+    .detail-inner {
+      width: min(790px, 100%);
+      margin: 0 auto;
+    }
+
+    .detail-header {
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .detail-header h2 {
+      margin: 10px 0 7px;
+      font-size: clamp(25px, 3vw, 34px);
+      line-height: 1.14;
+      letter-spacing: -0.035em;
+    }
+
+    .detail-summary {
+      max-width: 700px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .button {
+      padding: 8px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      color: var(--text);
+      background: white;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .button:hover { background: var(--soft); }
+    .button.primary { border-color: var(--dark); color: white; background: var(--dark); }
+    .button.small { padding: 6px 9px; font-size: 12px; }
+
+    .section { margin-top: 24px; }
+
+    .section-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -0.018em;
+    }
+
+    h4 {
+      margin: 0 0 5px;
+      font-size: 13px;
+    }
+
+    p { margin: 0; }
+    .muted { color: var(--muted); }
+    .quiet { color: var(--quiet); }
+    .small { font-size: 12px; }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+    }
+
+    .card { padding: 17px; }
+
+    .progress-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--line);
+    }
+
+    .progress-cell {
+      min-height: 86px;
+      padding: 13px;
+      background: white;
+    }
+
+    .progress-cell strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .action-card {
+      display: flex;
+      min-height: 145px;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: white;
+    }
+
+    .action-card p {
+      flex: 1;
+      margin-bottom: 13px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .action-card.complete { background: var(--soft); }
+
+    .activity {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .activity li {
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1fr);
+      gap: 12px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .activity li:last-child { border-bottom: 0; }
+
+    .activity-time { color: var(--quiet); font-size: 12px; }
+
+    .drawer {
+      display: none;
+      margin-top: 14px;
+      padding: 17px;
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      background: var(--soft);
+    }
+
+    .drawer.visible { display: block; }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .choice {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .choice:hover { border-color: var(--line-strong); background: var(--soft); }
+    .choice strong { display: block; margin-bottom: 3px; }
+    .choice span { color: var(--muted); font-size: 11px; }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 20;
+      display: none;
+      max-width: 340px;
+      padding: 12px 15px;
+      border-radius: 8px;
+      color: white;
+      background: var(--dark);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    }
+
+    .toast.visible { display: block; }
+
+    .empty {
+      padding: 36px 22px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 1050px) {
+      .shell { grid-template-columns: 190px 330px minmax(0, 1fr); }
+      .action-grid, .choice-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 800px) {
+      .model-note { align-items: flex-start; flex-direction: column; gap: 8px; }
+      .shell { grid-template-columns: 180px 1fr; }
+      .detail { grid-column: 1 / -1; border-top: 1px solid var(--line); }
+      .issue-list { max-height: 500px; }
+    }
+
+    @media (max-width: 560px) {
+      .prototype { display: none; }
+      .shell { display: block; }
+      .sidebar, .issue-column { border-right: 0; border-bottom: 1px solid var(--line); }
+      .progress-summary { grid-template-columns: 1fr; }
+      .detail { padding-inline: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-bar">
+    <div class="brand">
+      <span class="brand-mark">LS</span>
+      <span>LangSmith Engine</span>
+    </div>
+    <span class="prototype">Issue lifecycle concept · interactive prototype</span>
+  </header>
+
+  <div class="model-note">
+    <div><strong>Lifecycle model</strong> Four statuses: Open, In progress, Resolved, and Ignored.</div>
+    <div class="status-key">
+      <span class="pill attention">Needs review = attention queue</span>
+      <span class="pill">Reminders = rules on active issues</span>
+    </div>
+  </div>
+
+  <main class="shell">
+    <aside class="sidebar">
+      <div class="nav-heading">Attention</div>
+      <button class="nav-button" aria-selected="true" data-view="needs-review">
+        <span>Needs review</span><span class="count" id="count-needs-review">2</span>
+      </button>
+
+      <div class="nav-heading">Lifecycle</div>
+      <button class="nav-button" aria-selected="false" data-view="open">
+        <span>Open</span><span class="count" id="count-open">3</span>
+      </button>
+      <button class="nav-button" aria-selected="false" data-view="in-progress">
+        <span>In progress</span><span class="count" id="count-in-progress">2</span>
+      </button>
+      <button class="nav-button" aria-selected="false" data-view="resolved">
+        <span>Resolved</span><span class="count" id="count-resolved">1</span>
+      </button>
+      <button class="nav-button" aria-selected="false" data-view="ignored">
+        <span>Ignored</span><span class="count" id="count-ignored">1</span>
+      </button>
+
+      <div class="sidebar-explainer">
+        <strong>Needs review is not a fifth status.</strong>
+        It collects new, recurring, and reminder-due issues that need attention.
+      </div>
+    </aside>
+
+    <section class="issue-column">
+      <div class="column-header">
+        <h1 id="view-title">Needs review</h1>
+        <p class="muted small" id="view-description">Issues that need an intentional decision.</p>
+      </div>
+      <div class="issue-list" id="issue-list"></div>
+    </section>
+
+    <section class="detail">
+      <div class="detail-inner" id="detail"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const issues = [
+      {
+        id: "auth",
+        title: "Authentication errors are silently ignored",
+        summary: "The account tool returns 401, but the agent continues without telling the user.",
+        status: "open",
+        attention: "New issue",
+        context: [],
+        activities: [
+          { time: "Today", text: "Engine detected 58 contributing traces across 29 conversations." }
+        ]
+      },
+      {
+        id: "loop",
+        title: "Agent repeatedly retries unavailable inventory",
+        summary: "The workflow can perform six or more identical inventory checks before stopping.",
+        status: "open",
+        attention: "Recurrence",
+        context: ["12 new traces"],
+        activities: [
+          { time: "Today", text: "Issue reopened after the same failure pattern returned." },
+          { time: "Aug 15", text: "Issue resolved after inventory fallback change shipped." }
+        ]
+      },
+      {
+        id: "cancel",
+        title: "Cancellation questions trigger the cancellation tool",
+        summary: "Informational questions can be interpreted as confirmation to cancel.",
+        status: "open",
+        attention: null,
+        context: ["Reminder Sep 3"],
+        activities: [
+          { time: "Aug 20", text: "Reminder set for Sep 3." },
+          { time: "Aug 20", text: "Two offline examples added." }
+        ]
+      },
+      {
+        id: "retrieval",
+        title: "Outdated documentation is selected during retrieval",
+        summary: "The retriever prefers deprecated v1 setup guides over current references.",
+        status: "in-progress",
+        attention: null,
+        context: ["PR #142 open", "Validation failed"],
+        activities: [
+          { time: "11:18", text: "Experiment failed on 2 of 14 examples." },
+          { time: "10:42", text: "PR #142 opened." },
+          { time: "10:31", text: "Four offline examples added." }
+        ]
+      },
+      {
+        id: "scope",
+        title: "Agent answers unsupported tax questions",
+        summary: "The support agent responds outside the configured product domain.",
+        status: "in-progress",
+        attention: null,
+        context: ["Evaluator added"],
+        activities: [
+          { time: "Yesterday", text: "Scope-adherence evaluator created." }
+        ]
+      },
+      {
+        id: "tool",
+        title: "Incorrect tool selected for invoice lookup",
+        summary: "Invoice requests were routed to the general account tool.",
+        status: "resolved",
+        attention: null,
+        context: ["PR #128 merged"],
+        activities: [
+          { time: "Aug 18", text: "Marked resolved after PR #128 was deployed." },
+          { time: "Aug 17", text: "Validation passed on 22 examples." }
+        ]
+      },
+      {
+        id: "latency",
+        title: "Long responses for low-priority status questions",
+        summary: "Responses are slower than average but remain within the team's accepted range.",
+        status: "ignored",
+        attention: null,
+        context: ["Accepted risk"],
+        activities: [
+          { time: "Aug 19", text: "Ignored: accepted performance tradeoff." }
+        ]
+      }
+    ];
+
+    const viewMeta = {
+      "needs-review": {
+        title: "Needs review",
+        description: "Issues that need an intentional decision.",
+        filter: (issue) => Boolean(issue.attention)
+      },
+      "open": {
+        title: "Open",
+        description: "Reviewed issues that remain active without a fix underway.",
+        filter: (issue) => issue.status === "open"
+      },
+      "in-progress": {
+        title: "In progress",
+        description: "Issues with remediation or evaluation work underway.",
+        filter: (issue) => issue.status === "in-progress"
+      },
+      "resolved": {
+        title: "Resolved",
+        description: "Issues closed because the underlying problem was fixed.",
+        filter: (issue) => issue.status === "resolved"
+      },
+      "ignored": {
+        title: "Ignored",
+        description: "Issues removed from active work with a recorded reason.",
+        filter: (issue) => issue.status === "ignored"
+      }
+    };
+
+    let currentView = "needs-review";
+    let selectedId = "auth";
+    let openDrawer = null;
+    let toastTimer = null;
+
+    const issueList = document.getElementById("issue-list");
+    const detail = document.getElementById("detail");
+    const toast = document.getElementById("toast");
+
+    function statusLabel(status) {
+      return {
+        open: "Open",
+        "in-progress": "In progress",
+        resolved: "Resolved",
+        ignored: "Ignored"
+      }[status];
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("visible");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("visible"), 2600);
+    }
+
+    function counts() {
+      const totals = {
+        "needs-review": issues.filter(viewMeta["needs-review"].filter).length,
+        open: issues.filter(viewMeta.open.filter).length,
+        "in-progress": issues.filter(viewMeta["in-progress"].filter).length,
+        resolved: issues.filter(viewMeta.resolved.filter).length,
+        ignored: issues.filter(viewMeta.ignored.filter).length
+      };
+
+      Object.entries(totals).forEach(([key, value]) => {
+        document.getElementById(`count-${key}`).textContent = value;
+      });
+    }
+
+    function visibleIssues() {
+      return issues.filter(viewMeta[currentView].filter);
+    }
+
+    function renderList() {
+      const meta = viewMeta[currentView];
+      document.getElementById("view-title").textContent = meta.title;
+      document.getElementById("view-description").textContent = meta.description;
+
+      const visible = visibleIssues();
+      if (!visible.some((issue) => issue.id === selectedId)) {
+        selectedId = visible[0]?.id || null;
+      }
+
+      issueList.innerHTML = visible.length
+        ? visible.map((issue) => `
+          <button class="issue-item" data-issue="${issue.id}" aria-selected="${issue.id === selectedId}">
+            <div class="issue-title">${issue.title}</div>
+            <div class="row">
+              <span class="pill ${issue.status === "in-progress" ? "dark" : ""}">${statusLabel(issue.status)}</span>
+              ${issue.attention ? `<span class="pill attention">${issue.attention}</span>` : ""}
+              ${issue.context.slice(0, 1).map((item) => `<span class="pill">${item}</span>`).join("")}
+            </div>
+          </button>
+        `).join("")
+        : `<div class="empty">No issues in this view.</div>`;
+
+      document.querySelectorAll(".issue-item").forEach((button) => {
+        button.addEventListener("click", () => {
+          selectedId = button.dataset.issue;
+          openDrawer = null;
+          render();
+        });
+      });
+    }
+
+    function activityMarkup(issue) {
+      return issue.activities.length
+        ? issue.activities.map((item) => `
+            <li>
+              <span class="activity-time">${item.time}</span>
+              <span>${item.text}</span>
+            </li>
+          `).join("")
+        : `<li><span class="activity-time">—</span><span>No activity yet.</span></li>`;
+    }
+
+    function actionCard(issue, key, title, description, buttonLabel) {
+      const isComplete = issue.context.some((item) => item.toLowerCase().includes(key));
+      return `
+        <div class="action-card ${isComplete ? "complete" : ""}">
+          <h4>${title}</h4>
+          <p>${description}</p>
+          <button class="button small" data-progress="${key}" ${isComplete ? "disabled" : ""}>
+            ${isComplete ? "Added" : buttonLabel}
+          </button>
+        </div>
+      `;
+    }
+
+    function renderDrawers(issue) {
+      return `
+        <div class="drawer ${openDrawer === "remind" ? "visible" : ""}" id="remind-drawer">
+          <h4>When should this return?</h4>
+          <p class="muted small">The issue stays Open. The rule determines when it needs attention again.</p>
+          <div class="choice-grid">
+            <button class="choice" data-reminder="Reminder Sep 3">
+              <strong>On a date</strong>
+              <span>Bring this back on Sep 3.</span>
+            </button>
+            <button class="choice" data-reminder="Notify on recurrence">
+              <strong>Next occurrence</strong>
+              <span>Notify me when another trace matches.</span>
+            </button>
+            <button class="choice" data-reminder="Notify if frequency increases">
+              <strong>If it gets worse</strong>
+              <span>Notify me when frequency increases.</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="drawer ${openDrawer === "ignore" ? "visible" : ""}" id="ignore-drawer">
+          <h4>Why are you ignoring this issue?</h4>
+          <p class="muted small">The issue will leave active views and remain available under Ignored.</p>
+          <div class="choice-grid">
+            <button class="choice" data-ignore="Incorrectly flagged">
+              <strong>Incorrectly flagged</strong>
+              <span>The issue is not real.</span>
+            </button>
+            <button class="choice" data-ignore="Accepted risk">
+              <strong>Accepted risk</strong>
+              <span>The issue is real but will not be fixed.</span>
+            </button>
+            <button class="choice" data-ignore="Low impact">
+              <strong>Low impact</strong>
+              <span>The issue is not worth prioritizing.</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDetail() {
+      const issue = issues.find((item) => item.id === selectedId);
+      if (!issue) {
+        detail.innerHTML = `<div class="empty">Select an issue to view details.</div>`;
+        return;
+      }
+
+      const isActive = issue.status === "open" || issue.status === "in-progress";
+      const progressCount = issue.context.filter((item) =>
+        /evaluator|example|pr/i.test(item)
+      ).length;
+
+      detail.innerHTML = `
+        <div class="detail-header">
+          <div class="row">
+            <span class="pill ${issue.status === "in-progress" ? "dark" : ""}">${statusLabel(issue.status)}</span>
+            ${issue.attention ? `<span class="pill attention">${issue.attention}</span>` : ""}
+            ${issue.context.map((item) => `<span class="pill">${item}</span>`).join("")}
+          </div>
+          <h2>${issue.title}</h2>
+          <p class="detail-summary">${issue.summary}</p>
+
+          ${isActive ? `
+            <div class="actions">
+              <button class="button primary" id="fix-action">Fix</button>
+              <button class="button" id="remind-action">Remind me</button>
+              <button class="button" id="ignore-action">Ignore</button>
+              ${issue.status === "in-progress" ? `<button class="button" id="resolve-action">Mark resolved</button>` : ""}
+            </div>
+          ` : issue.status === "resolved" ? `
+            <div class="actions">
+              <button class="button" id="recurrence-action">Simulate recurrence</button>
+            </div>
+          ` : ""}
+
+          ${renderDrawers(issue)}
+        </div>
+
+        ${isActive ? `
+          <div class="section">
+            <div class="section-heading">
+              <h3>Current state</h3>
+              <span class="muted small">${issue.status === "in-progress" ? "Work has started" : "No fix underway"}</span>
+            </div>
+            <div class="progress-summary">
+              <div class="progress-cell">
+                <span class="quiet small">Lifecycle</span>
+                <strong>${statusLabel(issue.status)}</strong>
+                <span class="muted small">${issue.status === "in-progress" ? "At least one action is underway." : "Active, but no fix is underway."}</span>
+              </div>
+              <div class="progress-cell">
+                <span class="quiet small">Attention</span>
+                <strong>${issue.attention || "Reviewed"}</strong>
+                <span class="muted small">${issue.attention ? "This issue needs a decision." : "An intentional action was taken."}</span>
+              </div>
+              <div class="progress-cell">
+                <span class="quiet small">Artifacts</span>
+                <strong>${progressCount}</strong>
+                <span class="muted small">Evaluator, examples, or PR linked.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-heading">
+              <div>
+                <h3>Take action</h3>
+                <p class="muted small">Any of these actions marks the issue In progress.</p>
+              </div>
+            </div>
+            <div class="action-grid">
+              ${actionCard(issue, "evaluator", "Add evaluator", "Create ongoing coverage for this failure pattern.", "Review evaluator")}
+              ${actionCard(issue, "example", "Add offline examples", "Add production failures to the evaluation dataset.", "Review examples")}
+              ${actionCard(issue, "pr", "Open PR", "Apply Engine's proposed code or prompt change.", "Review proposed fix")}
+            </div>
+          </div>
+        ` : ""}
+
+        <div class="section">
+          <div class="section-heading">
+            <h3>Activity</h3>
+            <span class="muted small">One history across lifecycle and artifacts</span>
+          </div>
+          <div class="panel card">
+            <ul class="activity">${activityMarkup(issue)}</ul>
+          </div>
+        </div>
+      `;
+
+      bindDetailActions(issue);
+    }
+
+    function markReviewed(issue) {
+      issue.attention = null;
+    }
+
+    function addActivity(issue, text) {
+      issue.activities.unshift({ time: "Just now", text });
+    }
+
+    function startProgress(issue, kind) {
+      const labels = {
+        evaluator: "Evaluator added",
+        example: "3 offline examples added",
+        pr: "PR #156 open"
+      };
+      issue.status = "in-progress";
+      markReviewed(issue);
+      if (!issue.context.some((item) => item.toLowerCase().includes(kind))) {
+        issue.context.push(labels[kind]);
+      }
+      addActivity(issue, labels[kind] + ". Issue moved to In progress.");
+      showToast(`Issue moved to In progress · ${labels[kind]}`);
+      render();
+    }
+
+    function bindDetailActions(issue) {
+      document.getElementById("fix-action")?.addEventListener("click", () => {
+        openDrawer = null;
+        issue.status = "in-progress";
+        markReviewed(issue);
+        addActivity(issue, "Fix started.");
+        showToast("Issue moved to In progress");
+        render();
+      });
+
+      document.getElementById("remind-action")?.addEventListener("click", () => {
+        openDrawer = openDrawer === "remind" ? null : "remind";
+        renderDetail();
+      });
+
+      document.getElementById("ignore-action")?.addEventListener("click", () => {
+        openDrawer = openDrawer === "ignore" ? null : "ignore";
+        renderDetail();
+      });
+
+      document.getElementById("resolve-action")?.addEventListener("click", () => {
+        issue.status = "resolved";
+        issue.attention = null;
+        issue.context = issue.context.filter((item) => !/reminder|notify/i.test(item));
+        addActivity(issue, "Issue marked resolved.");
+        currentView = "resolved";
+        openDrawer = null;
+        showToast("Issue moved to Resolved");
+        render();
+      });
+
+      document.getElementById("recurrence-action")?.addEventListener("click", () => {
+        issue.status = "open";
+        issue.attention = "Recurrence";
+        issue.context.unshift("6 new traces");
+        addActivity(issue, "Issue reopened after the same failure pattern returned.");
+        currentView = "needs-review";
+        openDrawer = null;
+        showToast("Issue reopened · Needs review");
+        render();
+      });
+
+      document.querySelectorAll("[data-progress]").forEach((button) => {
+        button.addEventListener("click", () => startProgress(issue, button.dataset.progress));
+      });
+
+      document.querySelectorAll("[data-reminder]").forEach((button) => {
+        button.addEventListener("click", () => {
+          issue.status = "open";
+          markReviewed(issue);
+          issue.context = issue.context.filter((item) => !/reminder|notify/i.test(item));
+          issue.context.unshift(button.dataset.reminder);
+          addActivity(issue, button.dataset.reminder + ".");
+          currentView = "open";
+          openDrawer = null;
+          showToast(`Issue remains Open · ${button.dataset.reminder}`);
+          render();
+        });
+      });
+
+      document.querySelectorAll("[data-ignore]").forEach((button) => {
+        button.addEventListener("click", () => {
+          issue.status = "ignored";
+          issue.attention = null;
+          issue.context = [button.dataset.ignore];
+          addActivity(issue, "Ignored: " + button.dataset.ignore + ".");
+          currentView = "ignored";
+          openDrawer = null;
+          showToast(`Issue moved to Ignored · ${button.dataset.ignore}`);
+          render();
+        });
+      });
+    }
+
+    function render() {
+      counts();
+      document.querySelectorAll(".nav-button").forEach((button) => {
+        button.setAttribute("aria-selected", String(button.dataset.view === currentView));
+      });
+      renderList();
+      renderDetail();
+    }
+
+    document.querySelectorAll(".nav-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        currentView = button.dataset.view;
+        openDrawer = null;
+        render();
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>

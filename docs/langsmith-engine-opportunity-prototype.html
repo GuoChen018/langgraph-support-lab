@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LangSmith Engine — Triage opportunities prototype</title>
+  <style>
+    :root {
+      /* LangSmith DS semantic foundations: category → role → variant → state */
+      --bg-surface-level-1: #ffffff;
+      --bg-surface-level-1-hover: #f8fafc;
+      --bg-surface-level-2: #f1f5f9;
+      --bg-brand-strong: #145095;
+      --bg-brand-subtle: #e5f4ff;
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-tertiary: #64748b;
+      --text-quaternary: #94a3b8;
+      --text-on-brand: #ffffff;
+      --border-default: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --border-focus: #4499f7;
+      --radius-xs: 2px;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-full: 999px;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 24px;
+      --space-6: 32px;
+
+      /* Local aliases keep the standalone prototype readable. */
+      --bg: var(--bg-surface-level-1);
+      --surface: var(--bg-surface-level-1);
+      --surface-subtle: var(--bg-surface-level-1-hover);
+      --surface-muted: var(--bg-surface-level-2);
+      --border: var(--border-default);
+      --text: var(--text-primary);
+      --text-quiet: var(--text-quaternary);
+      --brand: var(--bg-brand-strong);
+      --brand-soft: var(--bg-brand-subtle);
+      --blue: #4499f7;
+      --green: #08775d;
+      --green-soft: #ecfdf5;
+      --amber: #a15c07;
+      --amber-soft: #fffbeb;
+      --red: #b42318;
+      --red-soft: #fee4e2;
+      --purple: #6941c6;
+      --purple-soft: #f4f3ff;
+      --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+      --shadow-lg: 0 14px 40px rgba(15, 23, 42, 0.16);
+      --sans: Inter, "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", "Fira Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      color: var(--text);
+      background: var(--bg);
+      font-family: var(--sans);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+    .hidden { display: none !important; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      height: 100vh;
+    }
+
+    .global-nav {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 8px;
+      border-right: 1px solid #e4e4e7;
+      background: white;
+      z-index: 20;
+    }
+    .nav-stack { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+    .nav-gap { height: 10px; }
+    .icon-button {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      padding: 5px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .icon-button:hover { background: var(--surface-muted); }
+    .icon-button.active { background: var(--brand-soft); }
+    .icon-button img { width: 16px; height: 16px; display: block; }
+    .avatar {
+      display: grid;
+      width: 24px;
+      height: 24px;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 4px;
+      background: linear-gradient(135deg, #f79009, #7f56d9);
+      color: white;
+      font-weight: 700;
+      font-size: 10px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-rows: 95px minmax(0, 1fr);
+      min-width: 0;
+      min-height: 0;
+    }
+    .workspace-header {
+      border-bottom: 1px solid var(--border);
+      background: white;
+    }
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      height: 39px;
+      gap: 7px;
+      padding: 0 12px;
+      color: var(--text-secondary);
+      font-size: 11px;
+    }
+    .crumb-muted { color: var(--text-quiet); }
+    .project-nav {
+      display: flex;
+      height: 56px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+    }
+    .project-left, .project-tabs, .project-actions {
+      display: flex;
+      align-items: center;
+    }
+    .project-left { gap: 24px; min-width: 0; }
+    .project-name { font-weight: 650; white-space: nowrap; }
+    .project-tabs { height: 56px; gap: 24px; color: var(--text-secondary); }
+    .project-tab {
+      position: relative;
+      display: flex;
+      height: 56px;
+      align-items: center;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+    .project-tab.active { color: var(--text); font-weight: 550; }
+    .project-tab.active::after {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      background: var(--brand);
+      content: "";
+    }
+    .count-badge {
+      margin-left: 4px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-size: 10px;
+    }
+    .project-actions { gap: 8px; }
+
+    .button {
+      display: inline-flex;
+      min-height: 30px;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: 5px 10px;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface-level-1);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .button:hover { background: var(--bg-surface-level-1-hover); border-color: var(--border-strong); }
+    .button img { width: 14px; height: 14px; }
+    .button.primary { border-color: var(--brand); color: var(--brand); }
+    .button.primary:hover { background: var(--brand-soft); }
+    .button.solid { border-color: var(--brand); background: var(--brand); color: var(--text-on-brand); }
+    .button.solid:hover { background: #0d3d77; border-color: #0d3d77; }
+    .button.danger { border-color: transparent; color: var(--red); }
+    .button.danger:hover { background: var(--red-soft); }
+    .button.ghost { border-color: transparent; box-shadow: none; background: transparent; }
+    .button.small { min-height: 24px; padding: 3px 8px; font-size: 11px; }
+    .button.wide { width: 100%; }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 254px minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    .issue-sidebar {
+      display: flex;
+      min-height: 0;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      background: white;
+    }
+    .issue-sidebar-header {
+      display: flex;
+      height: 42px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .issue-sidebar-title { display: flex; align-items: center; gap: 5px; font-weight: 600; }
+    .issue-view-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 7px 8px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .view-tab {
+      position: relative;
+      padding: 7px 6px 8px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    .view-tab.active { color: var(--text); font-weight: 600; }
+    .view-tab.active::after {
+      position: absolute;
+      right: 5px;
+      bottom: 0;
+      left: 5px;
+      height: 2px;
+      border-radius: var(--radius-full);
+      background: var(--brand);
+      content: "";
+    }
+    .issue-list { min-height: 0; overflow-y: auto; }
+    .issue-row {
+      padding: 11px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+    }
+    .issue-row:hover { background: #fbfdff; }
+    .issue-row.active {
+      border-left: 2px solid var(--brand);
+      background: #f8fbff;
+      padding-left: 8px;
+    }
+    .issue-row-title {
+      display: flex;
+      gap: 7px;
+      align-items: flex-start;
+      font-weight: 550;
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    .severity-mark {
+      display: inline-flex;
+      height: 15px;
+      align-items: flex-end;
+      gap: 2px;
+      flex: 0 0 auto;
+      padding-top: 2px;
+    }
+    .severity-mark i { display: block; width: 2px; border-radius: 1px; background: #f97066; }
+    .severity-mark i:nth-child(1) { height: 5px; }
+    .severity-mark i:nth-child(2) { height: 9px; }
+    .severity-mark i:nth-child(3) { height: 14px; }
+    .issue-row-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 7px;
+      padding-left: 21px;
+      color: var(--text-tertiary);
+      font-size: 10px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 19px;
+      padding: 2px 6px;
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius-full);
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .detail {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      background: white;
+    }
+    .detail-header {
+      position: sticky;
+      top: 0;
+      z-index: 12;
+      padding: 14px 20px 17px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(10px);
+    }
+    .detail-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .title-wrap { display: flex; align-items: center; gap: 7px; min-width: 0; }
+    h1 {
+      margin: 0;
+      overflow: hidden;
+      font-size: 16px;
+      font-weight: 650;
+      letter-spacing: -0.035em;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .header-actions { display: flex; gap: 7px; }
+    .detail-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 11px;
+      color: var(--text-quiet);
+      font-size: 11px;
+    }
+    .divider { width: 1px; height: 13px; background: var(--border); }
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 23px;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: #f8f7fc;
+      color: #2f2f2f;
+    }
+    .meta-pill.category { border-radius: 8px; background: #f0f9ff; color: #0d3d77; }
+
+    .detail-content {
+      width: min(100%, 1050px);
+      padding: 20px 20px 88px;
+    }
+    .issue-description {
+      margin: 0 0 18px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .section { margin-top: 20px; }
+    .section:first-child { margin-top: 0; }
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 9px;
+    }
+    h2 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 1.4;
+    }
+    h3 {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 650;
+    }
+    p { margin: 0; }
+    .muted { color: var(--text-tertiary); }
+    .quiet { color: var(--text-quiet); }
+    .mono { font-family: var(--mono); }
+    .tiny { font-size: 10px; }
+
+    .return-banner {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-4);
+      margin-bottom: var(--space-4);
+      padding: var(--space-3) var(--space-4);
+      border: 1px solid #d9d6fe;
+      border-radius: var(--radius-md);
+      background: var(--purple-soft);
+      box-shadow: var(--shadow-xs);
+    }
+    .return-banner strong { display: block; margin-bottom: 3px; color: #42307d; }
+
+    .concept-banner {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+      padding: var(--space-3);
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius-md);
+      background: #f8fbff;
+      box-shadow: var(--shadow-xs);
+    }
+    .concept-index {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border-radius: 5px;
+      background: var(--brand);
+      color: white;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 650;
+    }
+    .concept-banner strong { display: block; font-size: 11px; }
+    .concept-banner p { margin-top: 2px; color: var(--text-tertiary); font-size: 10px; }
+    .concept-theme {
+      padding: 3px 6px;
+      border-radius: var(--radius-full);
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-size: 9px;
+      white-space: nowrap;
+    }
+
+    .decision-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+      margin: 0 0 var(--space-4);
+      padding: var(--space-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-surface-level-1);
+      box-shadow: var(--shadow-xs);
+    }
+    .decision-copy strong { display: block; font-size: 12px; }
+    .decision-copy span { color: var(--text-tertiary); font-size: 11px; }
+    .decision-actions { display: flex; gap: 7px; }
+
+
+    .lifecycle-preview {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 7px;
+      margin: 0 0 18px;
+    }
+    .lifecycle-state {
+      padding: 9px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: white;
+    }
+    .lifecycle-state.active { border-color: #93c5fd; background: #f8fbff; }
+    .lifecycle-state strong { display: block; font-size: 10px; }
+    .lifecycle-state span { display: block; margin-top: 3px; color: var(--text-tertiary); font-size: 9px; }
+    .lifecycle-note {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 9px;
+      border-radius: 5px;
+      background: var(--surface-subtle);
+      color: var(--text-tertiary);
+      font-size: 9px;
+    }
+
+    .claim-card {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: white;
+    }
+    .claim-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .claim-cell { min-height: 108px; padding: 13px 14px; }
+    .claim-cell + .claim-cell { border-left: 1px solid var(--border); }
+    .eyebrow {
+      margin-bottom: 5px;
+      color: var(--text-quiet);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .claim-cell p { color: var(--text-secondary); font-size: 12px; line-height: 1.45; }
+    .claim-outcome {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--surface-subtle);
+    }
+    .claim-outcome p { color: var(--text-secondary); font-size: 11px; }
+    .confidence {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--amber);
+      white-space: nowrap;
+      font-size: 10px;
+    }
+
+    .impact-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+    }
+    .impact-metric { padding: 12px 13px; background: white; }
+    .impact-metric + .impact-metric { border-left: 1px solid var(--border); }
+    .impact-value { font-size: 18px; font-weight: 650; letter-spacing: -0.03em; }
+    .impact-label { margin-top: 2px; color: var(--text-tertiary); font-size: 10px; }
+    .impact-context {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 10px 13px;
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-radius: 0 0 7px 7px;
+      background: var(--surface-subtle);
+      color: var(--text-tertiary);
+      font-size: 10px;
+    }
+
+    .frequency-chart {
+      padding: 12px 15px 9px;
+      border-radius: 7px;
+      background: var(--surface-subtle);
+    }
+    .chart-summary {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .chart-summary strong { font-size: 12px; }
+    .chart-summary span { color: var(--text-tertiary); font-size: 10px; }
+    .bars {
+      display: flex;
+      height: 74px;
+      align-items: flex-end;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    .bar-wrap {
+      display: flex;
+      flex: 1;
+      height: 100%;
+      align-items: flex-end;
+      cursor: pointer;
+    }
+    .bar {
+      width: 100%;
+      min-height: 2px;
+      border-radius: 3px 3px 0 0;
+      background: var(--blue);
+      transition: opacity 120ms, transform 120ms;
+    }
+    .bar-wrap:hover .bar { opacity: 0.72; transform: translateY(-2px); }
+    .chart-axis {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 5px;
+      color: var(--text-quiet);
+      font-size: 8px;
+    }
+
+    .trace-table {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+    }
+    .trace-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      width: 100%;
+      padding: 8px 10px;
+      border: 0;
+      border-bottom: 1px solid #f1f5f9;
+      background: white;
+      text-align: left;
+      cursor: pointer;
+    }
+    .trace-row:last-child { border-bottom: 0; }
+    .trace-row:hover, .trace-row.selected { background: #f8fbff; }
+    .trace-main, .trace-side { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .agent-icon {
+      display: grid;
+      width: 20px;
+      height: 20px;
+      place-items: center;
+      border-radius: 4px;
+      background: #314a68;
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+    .agent-name { width: 95px; flex: 0 0 auto; font-weight: 650; font-size: 11px; }
+    .trace-summary {
+      overflow: hidden;
+      color: var(--text-tertiary);
+      font-size: 10px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .duration {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: var(--red-soft);
+      color: var(--red);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    .trace-proof {
+      display: grid;
+      grid-template-columns: 205px minmax(0, 1fr);
+      margin-top: 8px;
+      overflow: hidden;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      background: white;
+    }
+    .proof-reason {
+      padding: 12px;
+      border-right: 1px solid #bfdbfe;
+      background: #eff6ff;
+    }
+    .proof-reason p { margin-top: 5px; color: #1e3a5f; font-size: 10px; }
+    .span-list { padding: 8px; }
+    .span {
+      display: grid;
+      grid-template-columns: 20px 125px minmax(0, 1fr);
+      align-items: center;
+      gap: 7px;
+      padding: 7px 8px;
+      border-radius: 4px;
+      color: var(--text-tertiary);
+      font-size: 10px;
+    }
+    .span + .span { margin-top: 3px; }
+    .span.highlight { border: 1px solid #fecaca; background: #fff7f7; color: var(--text-secondary); }
+    .span-num {
+      display: grid;
+      width: 18px;
+      height: 18px;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--surface-muted);
+      color: var(--text-tertiary);
+      font-size: 9px;
+    }
+    .span.highlight .span-num { background: var(--red-soft); color: var(--red); }
+
+    .fix-summary {
+      color: var(--text-secondary);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+    .code-card {
+      margin-top: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+    }
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 9px;
+      border-bottom: 1px solid var(--border);
+      background: white;
+      font-family: var(--mono);
+      font-size: 9px;
+    }
+    pre {
+      margin: 0;
+      overflow: auto;
+      padding: 9px 11px;
+      background: #fbfffc;
+      color: #475569;
+      font-family: var(--mono);
+      font-size: 9px;
+      line-height: 1.55;
+      white-space: pre;
+    }
+    .plus { color: #079455; }
+    .minus { color: #d92d20; }
+
+    .artifact-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .artifact-card {
+      padding: var(--space-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-surface-level-1);
+      box-shadow: var(--shadow-xs);
+    }
+    .artifact-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .state-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      border-radius: var(--radius-full);
+      border: 1px solid currentColor;
+      font-size: 9px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .state-chip.ready { background: var(--green-soft); color: var(--green); }
+    .state-chip.warn { background: var(--amber-soft); color: var(--amber); }
+    .state-chip.fail { background: var(--red-soft); color: var(--red); }
+    .artifact-card p { margin-top: 7px; color: var(--text-tertiary); font-size: 10px; }
+    .validation-panel {
+      margin-top: 8px;
+      padding: var(--space-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface-subtle);
+    }
+    #fix-workspace.validation-focus .artifact-grid,
+    #fix-workspace.validation-focus > .section-heading .muted {
+      display: none;
+    }
+    #fix-workspace.validation-focus .validation-panel { margin-top: 0; border-color: #93c5fd; background: #f8fbff; }
+    .validation-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .validation-result { display: flex; gap: 8px; align-items: flex-start; }
+    .result-icon {
+      display: grid;
+      width: 24px;
+      height: 24px;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--red-soft);
+      color: var(--red);
+      font-weight: 700;
+    }
+    .validation-result p { margin-top: 2px; color: var(--text-tertiary); font-size: 10px; }
+    .validation-details {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+      margin-top: 10px;
+    }
+    .validation-detail {
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: white;
+      font-size: 10px;
+    }
+    .validation-detail span { display: block; margin-top: 3px; color: var(--text-tertiary); }
+
+    .evaluator-card { border: 1px solid var(--border); border-radius: 5px; overflow: hidden; }
+    .evaluator-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 9px;
+      border-bottom: 1px solid var(--border);
+      background: #f8fafc;
+    }
+    .evaluator-name { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 9px; }
+    .filter-row {
+      display: flex;
+      gap: 24px;
+      padding: 5px 9px;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--text-tertiary);
+      font-family: var(--mono);
+      font-size: 9px;
+    }
+
+    .history-list { border-left: 1px solid var(--border); margin: 6px 0 0 6px; padding-left: 15px; }
+    .history-item { position: relative; padding: 0 0 13px; }
+    .history-item::before {
+      position: absolute;
+      top: 4px;
+      left: -19px;
+      width: 7px;
+      height: 7px;
+      border: 2px solid white;
+      border-radius: 50%;
+      background: var(--brand);
+      box-shadow: 0 0 0 1px var(--border);
+      content: "";
+    }
+    .history-item strong { display: block; font-size: 10px; }
+    .history-item span { color: var(--text-tertiary); font-size: 10px; }
+
+    .floating-trigger {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 40;
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      background: #102a43;
+      box-shadow: 0 8px 25px rgba(15, 23, 42, 0.28);
+      color: white;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    .floating-trigger:hover { transform: translateY(-1px); }
+    .control-panel {
+      position: fixed;
+      right: 22px;
+      bottom: 72px;
+      z-index: 39;
+      width: 360px;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: white;
+      box-shadow: var(--shadow-lg);
+    }
+    .control-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .control-header strong { display: block; font-size: 13px; }
+    .control-header span { color: var(--text-tertiary); font-size: 10px; }
+    .control-group { padding: 10px 0; border-top: 1px solid var(--border); }
+    .control-group-title { margin-bottom: 7px; color: var(--text-tertiary); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+      font-size: 11px;
+    }
+    .switch {
+      position: relative;
+      width: 30px;
+      height: 18px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--border-strong);
+      cursor: pointer;
+    }
+    .switch::after {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: var(--shadow-xs);
+      content: "";
+      transition: left 140ms;
+    }
+    .switch.on { background: var(--brand); }
+    .switch.on::after { left: 15px; }
+    .scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .scenario-button {
+      padding: 7px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: white;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 10px;
+      text-align: left;
+    }
+    .scenario-button:hover { border-color: var(--brand); background: #f8fbff; }
+    .scenario-button.selected { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); }
+    .concept-list { display: grid; gap: 5px; }
+    .concept-option {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 8px;
+      width: 100%;
+      padding: 7px 8px;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-align: left;
+    }
+    .concept-option:hover { border-color: var(--border); background: var(--surface-subtle); }
+    .concept-option.selected { border-color: #93c5fd; background: #f8fbff; }
+    .concept-option-number {
+      display: grid;
+      width: 22px;
+      height: 22px;
+      place-items: center;
+      border-radius: 4px;
+      background: var(--surface-muted);
+      color: var(--text-tertiary);
+      font-family: var(--mono);
+      font-size: 9px;
+    }
+    .concept-option.selected .concept-option-number { background: var(--brand); color: white; }
+    .concept-option strong { display: block; font-size: 10px; }
+    .concept-option span { display: block; margin-top: 1px; color: var(--text-tertiary); font-size: 9px; line-height: 1.3; }
+    .control-select {
+      width: 100%;
+      padding: 6px 7px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: white;
+      color: var(--text-secondary);
+      font-size: 10px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.32);
+    }
+    .modal {
+      width: min(520px, 100%);
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-surface-level-1);
+      box-shadow: var(--shadow-lg);
+    }
+    .modal-header, .modal-footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
+    .modal-header { border-bottom: 1px solid var(--border); }
+    .modal-footer { border-top: 1px solid var(--border); }
+    .modal-header h2 { font-size: 14px; }
+    .modal-body { padding: var(--space-4); }
+    .form-section + .form-section { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); }
+    .form-label { margin-bottom: 7px; font-size: 11px; font-weight: 650; }
+    .radio-card, .check-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 9px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .radio-card + .radio-card, .check-row + .check-row { margin-top: 6px; }
+    .radio-card:has(input:checked), .check-row:has(input:checked) { border-color: #93c5fd; background: #f8fbff; }
+    .radio-card span, .check-row span { display: block; color: var(--text-tertiary); font-size: 10px; }
+    .radio-card strong, .check-row strong { display: block; color: var(--text-secondary); font-size: 11px; }
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      resize: vertical;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      font: inherit;
+      font-size: 11px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 76px;
+      bottom: 24px;
+      z-index: 70;
+      max-width: 330px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: #102a43;
+      box-shadow: var(--shadow-lg);
+      color: white;
+      font-size: 11px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: opacity 150ms, transform 150ms;
+    }
+    .toast.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 980px) {
+      .project-tabs { display: none; }
+      .main-grid { grid-template-columns: 210px minmax(0, 1fr); }
+      .claim-grid { grid-template-columns: 1fr; }
+      .claim-cell + .claim-cell { border-top: 1px solid var(--border); border-left: 0; }
+      .impact-grid { grid-template-columns: 1fr 1fr; }
+      .impact-metric:nth-child(3) { border-left: 0; border-top: 1px solid var(--border); }
+      .impact-metric:nth-child(4) { border-top: 1px solid var(--border); }
+      .artifact-grid, .validation-details { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      .app { grid-template-columns: 1fr; }
+      .global-nav { display: none; }
+      .main-grid { grid-template-columns: 1fr; }
+      .issue-sidebar { display: none; }
+      .detail-title-row { display: block; }
+      .header-actions { margin-top: 10px; overflow-x: auto; }
+      .decision-bar { align-items: flex-start; flex-direction: column; }
+      .trace-proof { grid-template-columns: 1fr; }
+      .proof-reason { border-right: 0; border-bottom: 1px solid #bfdbfe; }
+      .control-panel { right: 12px; left: 12px; width: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="global-nav" aria-label="Global navigation">
+      <div class="nav-stack">
+        <button class="icon-button"><img src="assets/engine-opportunity-prototype/icon-layout.svg" alt="" /></button>
+        <div class="nav-gap"></div>
+        <button class="icon-button"><img src="assets/engine-opportunity-prototype/icon-codepen.svg" alt="" /></button>
+        <button class="icon-button"><img src="assets/engine-opportunity-prototype/icon-search.svg" alt="" /></button>
+        <button class="icon-button"><img src="assets/engine-opportunity-prototype/icon-home.svg" alt="" /></button>
+        <button class="icon-button active"><img src="assets/engine-opportunity-prototype/icon-branch.svg" alt="" /></button>
+        <button class="icon-button"><img src="assets/engine-opportunity-prototype/icon-chart.svg" alt="" /></button>
+        <button class="icon-button"><img src="assets/engine-opportunity-prototype/icon-database.svg" alt="" /></button>
+        <button class="icon-button"><img src="assets/engine-opportunity-prototype/icon-scales.svg" alt="" /></button>
+      </div>
+      <div class="nav-stack">
+        <button class="icon-button"><img src="assets/engine-opportunity-prototype/icon-settings.svg" alt="" /></button>
+        <div class="avatar">G</div>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="workspace-header">
+        <div class="breadcrumbs">
+          <span>Personal</span><span class="crumb-muted">/</span><span>Tracing</span><span class="crumb-muted">/</span><span>langgraph-support-lab</span>
+        </div>
+        <div class="project-nav">
+          <div class="project-left">
+            <div class="project-name">⌘ langgraph-support-lab</div>
+            <nav class="project-tabs">
+              <span class="project-tab">Tracing</span>
+              <span class="project-tab">Evaluators</span>
+              <span class="project-tab">Automations</span>
+              <span class="project-tab">Insights</span>
+              <span class="project-tab active">Engine <span class="count-badge">20</span></span>
+            </nav>
+          </div>
+          <div class="project-actions">
+            <button class="button small">Retention&nbsp; 14d</button>
+            <button class="button small">Dashboard</button>
+            <button class="button small">Deployment</button>
+            <button class="button solid small">＋ New</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="main-grid">
+        <aside class="issue-sidebar">
+          <div class="issue-sidebar-header">
+            <div class="issue-sidebar-title">Issues <span class="quiet">20</span></div>
+            <span class="quiet tiny">↻ Next scan: 3h</span>
+          </div>
+          <div class="issue-view-tabs">
+            <button class="view-tab active">To review</button>
+            <button class="view-tab">Active</button>
+            <button class="view-tab">Resolved</button>
+            <button class="view-tab">Ignored</button>
+          </div>
+          <div class="issue-list" id="issue-list"></div>
+        </aside>
+
+        <main class="detail" id="detail">
+          <header class="detail-header">
+            <div class="detail-title-row">
+              <div class="title-wrap">
+                <h1>Agent silently ignores authentication failures in account-management tool calls</h1>
+                <button class="icon-button" aria-label="Copy issue link"><img src="assets/engine-opportunity-prototype/icon-link.svg" alt="" /></button>
+              </div>
+              <div class="header-actions">
+                <button class="button small" data-scroll="evaluator"><img src="assets/engine-opportunity-prototype/icon-scales.svg" alt="" />Create Evaluator</button>
+                <button class="button small" id="copy-fix"><img src="assets/engine-opportunity-prototype/icon-copy.svg" alt="" />Copy Fix Context</button>
+                <button class="button primary small" data-scroll="fix-workspace"><img src="assets/engine-opportunity-prototype/icon-pr.svg" alt="" />Open PR</button>
+              </div>
+            </div>
+            <div class="detail-meta">
+              <span class="meta-pill"><span class="severity-mark"><i></i><i></i><i></i></span> High⌄</span>
+              <span class="divider"></span>
+              <span class="meta-pill category">Authentication Error</span>
+              <span class="divider"></span>
+              <span class="meta-pill" id="status-pill">○ To review⌄</span>
+              <span class="divider"></span>
+              <span>Updated 12 minutes ago</span>
+            </div>
+          </header>
+
+          <div class="detail-content">
+            <div class="return-banner hidden" id="return-banner">
+              <div>
+                <strong>Returned · Recurrence condition met</strong>
+                <p class="muted tiny">You snoozed this issue on Aug 20 until the same pattern occurred again. Six new affected sessions were detected.</p>
+              </div>
+              <button class="button small" data-scroll="history">View history</button>
+            </div>
+
+            <div class="concept-banner" id="concept-banner">
+              <span class="concept-index" id="concept-index">ALL</span>
+              <div>
+                <strong id="concept-title">Combined design proposal</strong>
+                <p id="concept-description">All nine opportunities are enabled. Use the ✦ control to isolate and review each concept.</p>
+              </div>
+              <span class="concept-theme" id="concept-theme">All themes</span>
+            </div>
+
+            <p class="issue-description">
+              Across 84 of 700 <span class="mono">account_management</span> calls (12%) during the last three days, the tool returned an authentication error. In affected traces, the agent did not refresh credentials or retry, then responded as though the requested account change succeeded.
+            </p>
+
+            <div class="decision-bar opportunity" data-opportunity="lifecycle">
+              <div class="decision-copy">
+                <strong>What do you want to do?</strong>
+                <span>Choose an action after reviewing the evidence.</span>
+              </div>
+              <div class="decision-actions">
+                <button class="button solid" data-scroll="fix-workspace">Fix</button>
+                <button class="button" data-modal="snooze">Snooze</button>
+                <button class="button" data-modal="dismiss">Dismiss</button>
+              </div>
+            </div>
+
+            <div class="lifecycle-preview opportunity hidden" data-opportunity="lifecycle-model" id="lifecycle-preview">
+              <div class="lifecycle-state active"><strong>To review</strong><span>A triage decision is required.</span></div>
+              <div class="lifecycle-state"><strong>Active</strong><span>Remediation is underway.</span></div>
+              <div class="lifecycle-state"><strong>Resolved</strong><span>The issue is believed fixed.</span></div>
+              <div class="lifecycle-state"><strong>Ignored</strong><span>Dismissed with a reason.</span></div>
+              <div class="lifecycle-note"><span><strong>Snooze is not a fifth status.</strong> It temporarily removes an issue from To review until a saved return condition is met.</span><button class="button small" data-modal="snooze">Preview Snooze</button></div>
+            </div>
+
+            <section class="section opportunity" data-opportunity="evidence" id="evidence-summary">
+              <div class="section-heading">
+                <h2>What Engine observed</h2>
+                <span class="muted tiny">Observed facts are separated from diagnosis</span>
+              </div>
+              <div class="claim-card">
+                <div class="claim-grid">
+                  <div class="claim-cell">
+                    <div class="eyebrow">Expected</div>
+                    <p>Refresh an expired token and retry once—or clearly tell the user the account change was not completed.</p>
+                  </div>
+                  <div class="claim-cell">
+                    <div class="eyebrow">Observed</div>
+                    <p><span class="mono">account_management</span> returned <span class="mono">401 token_expired</span>. No refresh, retry, or failure disclosure followed.</p>
+                  </div>
+                  <div class="claim-cell">
+                    <div class="eyebrow">Consequence</div>
+                    <p>The final response claimed the requested change succeeded even though no account update occurred.</p>
+                  </div>
+                </div>
+                <div class="claim-outcome">
+                  <p><strong>Likely cause:</strong> Structured authentication results may bypass exception-based recovery.</p>
+                  <span class="confidence">● Medium-confidence diagnosis</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="section opportunity" data-opportunity="impact" id="impact">
+              <div class="section-heading">
+                <h2>User impact and scope</h2>
+                <span class="muted tiny">Production · last 72 hours · all eligible calls</span>
+              </div>
+              <div class="impact-grid">
+                <div class="impact-metric"><div class="impact-value">12%</div><div class="impact-label">84 of 700 eligible calls</div></div>
+                <div class="impact-metric"><div class="impact-value">51</div><div class="impact-label">affected sessions</div></div>
+                <div class="impact-metric"><div class="impact-value">11</div><div class="impact-label">false success responses</div></div>
+                <div class="impact-metric"><div class="impact-value">2</div><div class="impact-label">account workflows affected</div></div>
+              </div>
+              <div class="impact-context">
+                <span><strong>Concentrated:</strong> 40% of failures come from two tenants</span>
+                <span><strong>Version change:</strong> 2% on v42 → 18% on v43</span>
+              </div>
+            </section>
+
+            <section class="section" id="frequency">
+              <div class="frequency-chart">
+                <div class="chart-summary">
+                  <strong>Authentication failures over time</strong>
+                  <span>Current average 12% · increasing after v43</span>
+                </div>
+                <div class="bars" id="bars"></div>
+                <div class="chart-axis"><span>Tue Aug 18</span><span>Wed Aug 19</span><span>Thu Aug 20</span></div>
+              </div>
+            </section>
+
+            <section class="section" id="traces">
+              <div class="section-heading">
+                <h2>Linked Traces</h2>
+                <div>
+                  <span class="muted tiny">✦ Engine proposed 3 traces</span>
+                  <button class="button small" data-modal="examples"><img src="assets/engine-opportunity-prototype/icon-database.svg" alt="" />Add offline examples</button>
+                </div>
+              </div>
+              <div class="trace-table" id="trace-table"></div>
+              <div class="trace-proof opportunity" data-opportunity="trace" id="trace-proof">
+                <div class="proof-reason">
+                  <div class="eyebrow">Why this trace supports the issue</div>
+                  <p id="proof-copy">The tool returned 401, the agent skipped recovery, and the final response falsely confirmed success.</p>
+                </div>
+                <div class="span-list" id="span-list"></div>
+              </div>
+              <button class="button ghost small" style="margin-top:5px">View 60 more →</button>
+            </section>
+
+            <section class="section" id="proposed-fix">
+              <div class="section-heading"><h2>Proposed Fix</h2></div>
+              <p class="fix-summary">
+                Patterns confirmed in traces: (1) <span class="mono">account_management</span> returns a structured <span class="mono">401</span> or <span class="mono">token_expired</span> result; (2) the agent does not enter the recovery path because the workflow only handles thrown exceptions; and (3) the final response can claim the requested account change succeeded. Fix direction: normalize structured authentication failures, refresh credentials and retry once when possible, and block success confirmations unless the retry succeeds.
+              </p>
+              <div class="code-card">
+                <div class="code-header"><span>⌘ account_management.py&nbsp;&nbsp; <span class="plus">+21</span> <span class="minus">−2</span></span><span>↗</span></div>
+                <pre><span class="minus">- result = client.execute(action, payload)</span>
+<span class="minus">- return {"status": "success", "data": result}</span>
+<span class="plus">+ result = client.execute(</span>
+<span class="plus">+     action, payload, access_token=context.access_token</span>
+<span class="plus">+ )</span>
+<span class="plus">+ if result.status_code in (401, 403):</span>
+<span class="plus">+     refreshed = auth.refresh(context.refresh_token)</span>
+<span class="plus">+     if refreshed:</span>
+<span class="plus">+         result = client.execute(</span>
+<span class="plus">+             action, payload,</span>
+<span class="plus">+             access_token=refreshed.access_token</span>
+<span class="plus">+         )</span>
+<span class="plus">+ if result.status_code in (401, 403):</span>
+<span class="plus">+     raise ToolException(</span>
+<span class="plus">+         "Authentication failed. The requested account "</span>
+<span class="plus">+         "change was not completed."</span>
+<span class="plus">+     )</span>
+<span class="plus">+ return {"status": "success", "data": result.json()}</span></pre>
+              </div>
+            </section>
+
+            <section class="section opportunity" data-opportunity="fix" id="fix-workspace">
+              <div class="section-heading">
+                <div>
+                  <h2>Fix workspace</h2>
+                  <p class="muted tiny">Current artifacts and validation are tied to PR commit 8f42c1a.</p>
+                </div>
+                <button class="button small" id="mark-resolved">Mark resolved</button>
+              </div>
+              <div class="artifact-grid">
+                <article class="artifact-card">
+                  <div class="artifact-top"><h3>Pull request</h3><span class="state-chip ready">Open</span></div>
+                  <p>PR #142 · Handle structured authentication failures<br />Commit 8f42c1a · CI passing</p>
+                </article>
+                <article class="artifact-card">
+                  <div class="artifact-top"><h3>Offline examples</h3><span class="state-chip ready" id="examples-state">3 ready</span></div>
+                  <p>Expired token recovery, failed recovery, and valid-credential control.</p>
+                </article>
+                <article class="artifact-card">
+                  <div class="artifact-top"><h3>Evaluator</h3><span class="state-chip ready">Enabled</span></div>
+                  <p><span class="mono">account_management_silent_auth_failure</span><br />Production and experiment use</p>
+                </article>
+              </div>
+              <div class="validation-panel" id="validation-panel">
+                <div class="validation-top">
+                  <div class="validation-result">
+                    <div class="result-icon" id="result-icon">!</div>
+                    <div>
+                      <h3 id="validation-title">Latest validation failed</h3>
+                      <p id="validation-copy">Two of three issue-specific examples still produce a false success response.</p>
+                    </div>
+                  </div>
+                  <button class="button primary small" id="validation-action">Review 2 failures</button>
+                </div>
+                <div class="validation-details">
+                  <div class="validation-detail"><strong>Tested version</strong><span>PR #142 · 8f42c1a</span></div>
+                  <div class="validation-detail"><strong>Evaluation setup</strong><span>3 examples · 1 evaluator</span></div>
+                  <div class="validation-detail"><strong>Recommended next step</strong><span id="next-step">Update retry handling, then rerun affected examples.</span></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" id="evaluator">
+              <div class="section-heading"><h2>Suggested Evaluator</h2></div>
+              <div class="evaluator-card">
+                <div class="evaluator-header">
+                  <span class="evaluator-name"><img src="assets/engine-opportunity-prototype/icon-scales.svg" width="13" height="13" alt="" />account_management_silent_auth_failure <span class="plus">+21</span> <span class="minus">−4</span></span>
+                  <button class="button small">Create Evaluator</button>
+                </div>
+                <div class="filter-row"><span>Trace filter</span><span>eq(is_root, true)</span></div>
+                <pre>function performEval(run) {
+  const trace = JSON.stringify(run).toLowerCase();
+  const response = JSON.stringify(run.outputs ?? {}).toLowerCase();
+
+  const authFailed =
+    /401|403|unauthorized|token_expired/.test(trace);
+
+  if (!authFailed) return {
+    score: 0,
+    comment: "No account-management authentication failure detected."
+  };
+
+  const recoverySucceeded =
+    /refresh_token|authentication refreshed|retry succeeded/.test(trace);
+  const failureDisclosed =
+    /could not|unable|not completed|re-authenticate/.test(response);
+  const falseSuccess =
+    /successfully|has been updated|completed/.test(response);
+
+  return {
+    score: !recoverySucceeded && (!failureDisclosed || falseSuccess) ? 1 : 0,
+    comment: "Authentication failed; verify recovery and disclosure."
+  };
+}</pre>
+              </div>
+            </section>
+
+            <section class="section opportunity" data-opportunity="history" id="history">
+              <div class="section-heading"><h2>Issue history</h2></div>
+              <div class="history-list">
+                <div class="history-item"><strong>Returned after recurrence condition</strong><span>Aug 20 · 6 new affected sessions · Evaluator signal</span></div>
+                <div class="history-item"><strong>Snoozed until the same pattern recurred</strong><span>Aug 20 · Notify in Slack #agent-quality</span></div>
+                <div class="history-item"><strong>Issue detected</strong><span>Aug 18 · 84 of 700 eligible calls across 51 sessions</span></div>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <button class="floating-trigger" id="control-trigger" aria-label="Open prototype controls">✦</button>
+  <aside class="control-panel hidden" id="control-panel" aria-label="Prototype controls">
+    <div class="control-header">
+      <div><strong>9 design opportunities</strong><span>Select one concept to isolate its proposed UI.</span></div>
+      <button class="icon-button" id="control-close">×</button>
+    </div>
+    <div class="scenario-grid">
+      <button class="scenario-button" data-preset="baseline"><strong>Current UI</strong><br />Hide opportunity layers</button>
+      <button class="scenario-button selected" data-preset="all"><strong>Combined proposal</strong><br />Show all nine ideas</button>
+      <button class="scenario-button" data-preset="returned"><strong>Returned issue</strong><br />Recurrence context</button>
+      <button class="scenario-button" data-preset="fix"><strong>Mid-fix return</strong><br />Failed validation</button>
+    </div>
+    <div class="control-group">
+      <div class="control-group-title">Choose one opportunity</div>
+      <div class="concept-list">
+        <button class="concept-option" data-concept="1"><span class="concept-option-number">01</span><span><strong>Explainable issue summary</strong><span>Separate observations, consequence, diagnosis, and uncertainty.</span></span></button>
+        <button class="concept-option" data-concept="2"><span class="concept-option-number">02</span><span><strong>Guided trace proof</strong><span>Jump directly to the spans that demonstrate the failure.</span></span></button>
+        <button class="concept-option" data-concept="3"><span class="concept-option-number">03</span><span><strong>User impact and scope</strong><span>Translate event volume into sessions, outcomes, and blast radius.</span></span></button>
+        <button class="concept-option" data-concept="4"><span class="concept-option-number">04</span><span><strong>Guided validation flow</strong><span>Show what can run now and what the result means.</span></span></button>
+        <button class="concept-option" data-concept="5"><span class="concept-option-number">05</span><span><strong>Resumable Fix workspace</strong><span>Unify PR, examples, evaluator, experiment, and next step.</span></span></button>
+        <button class="concept-option" data-concept="6"><span class="concept-option-number">06</span><span><strong>Snooze with return conditions</strong><span>Configure when the issue returns, detection, and Slack delivery.</span></span></button>
+        <button class="concept-option" data-concept="7"><span class="concept-option-number">07</span><span><strong>Clear triage states</strong><span>Distinguish To review, Active, Resolved, and Ignored.</span></span></button>
+        <button class="concept-option" data-concept="8"><span class="concept-option-number">08</span><span><strong>Return reason and history</strong><span>Explain why the issue came back and what changed.</span></span></button>
+        <button class="concept-option" data-concept="9"><span class="concept-option-number">09</span><span><strong>Structured dismissal feedback</strong><span>Record whether Engine was wrong or risk was accepted.</span></span></button>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="control-group-title">Validation prototype state</div>
+      <label class="toggle-row" style="display:block">
+        <span style="display:block;margin-bottom:5px">Latest validation state</span>
+        <select class="control-select" id="validation-select">
+          <option value="failed">Failed</option>
+          <option value="missing">Missing</option>
+          <option value="stale">Stale</option>
+          <option value="passing">Passing</option>
+        </select>
+      </label>
+    </div>
+  </aside>
+
+  <div class="modal-backdrop hidden" id="modal-snooze">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="snooze-title">
+      <div class="modal-header"><h2 id="snooze-title">Snooze issue</h2><button class="icon-button" data-close-modal>×</button></div>
+      <div class="modal-body">
+        <div class="form-section">
+          <div class="form-label">Bring this issue back when</div>
+          <label class="radio-card"><input type="radio" name="return" checked /><div><strong>The same failure pattern occurs again</strong><span>Return after the next matching silent authentication failure.</span></div></label>
+          <label class="radio-card"><input type="radio" name="return" /><div><strong>Impact reaches a threshold</strong><span>Return when more than 10 sessions are affected in one hour.</span></div></label>
+          <label class="radio-card"><input type="radio" name="return" /><div><strong>On a specific date</strong><span>Choose a date to review the latest evidence.</span></div></label>
+        </div>
+        <div class="form-section">
+          <div class="form-label">How Engine detects it</div>
+          <label class="check-row"><input type="checkbox" checked disabled /><div><strong>Engine issue matching</strong><span>Match the existing authentication-failure pattern.</span></div></label>
+          <label class="check-row"><input type="checkbox" checked /><div><strong>Use proposed issue evaluator</strong><span>Improve detection of failures with no recovery or disclosure.</span></div></label>
+        </div>
+        <div class="form-section">
+          <div class="form-label">When the condition is met</div>
+          <label class="check-row"><input type="checkbox" checked disabled /><div><strong>Return issue to To review</strong><span>Show a Returned label and summarize what changed.</span></div></label>
+          <label class="check-row"><input type="checkbox" checked /><div><strong>Notify Slack #agent-quality</strong><span>Uses the tracing project's default notification destination.</span></div></label>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="button" data-close-modal>Cancel</button><button class="button solid" id="save-snooze">Snooze issue</button></div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modal-dismiss">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="dismiss-title">
+      <div class="modal-header"><h2 id="dismiss-title">Dismiss issue</h2><button class="icon-button" data-close-modal>×</button></div>
+      <div class="modal-body">
+        <div class="form-label">Why are you dismissing this issue?</div>
+        <label class="radio-card"><input type="radio" name="dismiss" checked /><div><strong>Incorrectly flagged</strong><span>The traces do not demonstrate the claimed behavior.</span></div></label>
+        <label class="radio-card"><input type="radio" name="dismiss" /><div><strong>Expected behavior</strong><span>The observed outcome is acceptable for this workflow.</span></div></label>
+        <label class="radio-card"><input type="radio" name="dismiss" /><div><strong>Accepted risk</strong><span>The issue is real, but the team does not plan to address it.</span></div></label>
+        <label class="radio-card"><input type="radio" name="dismiss" /><div><strong>Duplicate</strong><span>This behavior is already tracked by another issue.</span></div></label>
+        <div class="form-section"><div class="form-label">Optional note</div><textarea placeholder="Add context for teammates or help Engine improve future issue detection."></textarea></div>
+      </div>
+      <div class="modal-footer"><button class="button" data-close-modal>Cancel</button><button class="button danger" id="save-dismiss">Dismiss issue</button></div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modal-examples">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="examples-title">
+      <div class="modal-header"><div><h2 id="examples-title">Add offline examples</h2><p class="muted tiny">Save representative failures as repeatable tests.</p></div><button class="icon-button" data-close-modal>×</button></div>
+      <div class="modal-body">
+        <label class="check-row"><input type="checkbox" checked /><div><strong>Recover from an expired token</strong><span>Refresh credentials, retry once, and confirm success only after the retry succeeds.</span></div></label>
+        <label class="check-row"><input type="checkbox" checked /><div><strong>Disclose an unrecoverable failure</strong><span>Do not claim success; explain that the action was not completed.</span></div></label>
+        <label class="check-row"><input type="checkbox" checked /><div><strong>Preserve valid-credential behavior</strong><span>Complete normally without unnecessary refresh attempts.</span></div></label>
+        <div class="form-section"><div class="form-label">Dataset</div><select class="control-select"><option>authentication-recovery-regressions</option><option>Create new dataset…</option></select></div>
+      </div>
+      <div class="modal-footer"><button class="button" data-close-modal>Cancel</button><button class="button solid" id="save-examples">Add 3 examples</button></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const issues = [
+      ["Agent silently ignores authentication failures in account-management tool calls", "Authentication Error", "63 traces", "12m ago"],
+      ["Agent repeats identical tool calls within a trace instead of using cached results", "Agent Looping", "154 traces", "4h ago"],
+      ["Retrieval results are cited without supporting the final answer", "Grounding", "41 traces", "6h ago"],
+      ["Agent loses customer context after human approval step", "State Loss", "28 traces", "8h ago"],
+      ["Escalation tool is called before collecting required account details", "Tool Use", "19 traces", "1d ago"],
+      ["High-latency searches complete after the response timeout", "Latency", "73 traces", "1d ago"],
+      ["Agent confirms refunds before payment provider approval", "Incorrect Action", "12 traces", "2d ago"],
+      ["Fallback response omits required support contact information", "Response Quality", "35 traces", "2d ago"],
+    ];
+
+    const issueList = document.getElementById("issue-list");
+    issues.forEach((issue, index) => {
+      const row = document.createElement("article");
+      row.className = "issue-row" + (index === 0 ? " active" : "");
+      row.innerHTML = `
+        <div class="issue-row-title">
+          <span class="severity-mark"><i></i><i></i><i></i></span>
+          <span>${issue[0]}</span>
+        </div>
+        <div class="issue-row-meta">
+          <span><span class="tag">${issue[1]}</span>&nbsp; ${issue[2]}</span>
+          <span>${issue[3]}</span>
+        </div>`;
+      issueList.appendChild(row);
+    });
+
+    const barValues = [6, 9, 3, 0, 7, 4, 5, 9, 11, 6, 13, 8, 10, 15, 12, 7, 16, 4, 2, 12];
+    const bars = document.getElementById("bars");
+    barValues.forEach((value, index) => {
+      const wrap = document.createElement("div");
+      wrap.className = "bar-wrap";
+      wrap.title = `${value} failures · ${index < 7 ? "Aug 18" : index < 14 ? "Aug 19" : "Aug 20"}`;
+      wrap.innerHTML = `<div class="bar" style="height:${Math.max(2, value * 4)}px"></div>`;
+      bars.appendChild(wrap);
+    });
+
+    const traces = [
+      {
+        summary: "401 token_expired · no refresh attempted · billing update falsely confirmed",
+        time: "12m ago",
+        duration: "6.42s",
+        proof: "The tool returned 401, the agent skipped recovery, and the final response falsely confirmed success.",
+        spans: [
+          ["User request", "Update my billing address."],
+          ["account_management", "401 token_expired", true],
+          ["Agent decision", "No refresh or retry attempted", true],
+          ["Final response", "Your billing address has been updated.", true],
+        ],
+      },
+      {
+        summary: "401 unauthorized · email change failed · agent reported success",
+        time: "18m ago",
+        duration: "5.36s",
+        proof: "The access token was rejected. The agent continued without recovery and said the email was changed.",
+        spans: [
+          ["User request", "Change my account email."],
+          ["account_management", "401 unauthorized", true],
+          ["Agent decision", "Structured error treated as tool output", true],
+          ["Final response", "I've changed your account email.", true],
+        ],
+      },
+      {
+        summary: "401 unauthorized · no retry or disclosure · payment update falsely confirmed",
+        time: "31m ago",
+        duration: "7.12s",
+        proof: "Authentication failed before the payment update, but the agent implied that the new card was saved.",
+        spans: [
+          ["User request", "Replace my payment method."],
+          ["account_management", "401 unauthorized", true],
+          ["Workflow state", "payment_method_updated=false", true],
+          ["Final response", "Your payment method is up to date.", true],
+        ],
+      },
+    ];
+
+    const traceTable = document.getElementById("trace-table");
+    const spanList = document.getElementById("span-list");
+    const proofCopy = document.getElementById("proof-copy");
+
+    function renderTrace(index) {
+      const trace = traces[index];
+      document.querySelectorAll(".trace-row").forEach((row, rowIndex) => row.classList.toggle("selected", rowIndex === index));
+      proofCopy.textContent = trace.proof;
+      spanList.innerHTML = trace.spans.map((span, spanIndex) => `
+        <div class="span ${span[2] ? "highlight" : ""}">
+          <span class="span-num">${spanIndex + 1}</span>
+          <strong>${span[0]}</strong>
+          <span>${span[1]}</span>
+        </div>`).join("");
+    }
+
+    traces.forEach((trace, index) => {
+      const row = document.createElement("button");
+      row.className = "trace-row" + (index === 0 ? " selected" : "");
+      row.innerHTML = `
+        <span class="trace-main">
+          <span class="agent-icon">⌘</span>
+          <span class="agent-name">support_agent</span>
+          <span class="trace-summary">${trace.summary}</span>
+        </span>
+        <span class="trace-side"><span class="quiet tiny">${trace.time}</span><span class="duration">${trace.duration}</span></span>`;
+      row.addEventListener("click", () => renderTrace(index));
+      traceTable.appendChild(row);
+    });
+    renderTrace(0);
+
+    document.querySelectorAll("[data-scroll]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = document.getElementById(button.dataset.scroll);
+        target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    const opportunities = ["evidence", "trace", "impact", "fix", "lifecycle", "lifecycle-model", "history"];
+    function setOpportunity(name, visible) {
+      document.querySelectorAll(`[data-opportunity="${name}"]`).forEach((node) => node.classList.toggle("hidden", !visible));
+    }
+
+    const controlPanel = document.getElementById("control-panel");
+    document.getElementById("control-trigger").addEventListener("click", () => controlPanel.classList.toggle("hidden"));
+    document.getElementById("control-close").addEventListener("click", () => controlPanel.classList.add("hidden"));
+
+    const returnBanner = document.getElementById("return-banner");
+    const statusPill = document.getElementById("status-pill");
+    const conceptBanner = document.getElementById("concept-banner");
+    const fixWorkspace = document.getElementById("fix-workspace");
+    const conceptDefinitions = {
+      1: {
+        title: "Explainable issue summary",
+        description: "Separates directly observed behavior and user consequence from Engine's inferred diagnosis.",
+        theme: "Evidence and trust",
+        show: ["evidence"],
+        target: "evidence-summary",
+      },
+      2: {
+        title: "Guided trace proof",
+        description: "Explains why a representative trace was selected and highlights the decisive spans.",
+        theme: "Evidence and trust",
+        show: ["trace"],
+        target: "traces",
+      },
+      3: {
+        title: "User impact and scope",
+        description: "Translates trace volume into eligible calls, sessions, false outcomes, workflows, and affected versions.",
+        theme: "Impact and prioritization",
+        show: ["impact"],
+        target: "impact",
+      },
+      4: {
+        title: "Guided validation flow",
+        description: "Shows whether validation is missing, stale, failed, or passing—and the next useful action.",
+        theme: "Fix and validation",
+        show: ["fix"],
+        target: "fix-workspace",
+        validationOnly: true,
+      },
+      5: {
+        title: "Unified, resumable Fix workspace",
+        description: "Keeps the PR, examples, evaluator, tested commit, latest result, and blockers together.",
+        theme: "Fix and continuity",
+        show: ["fix"],
+        target: "fix-workspace",
+      },
+      6: {
+        title: "Snooze with return conditions",
+        description: "Separates when the issue returns, how recurrence is detected, and where notifications are delivered.",
+        theme: "Deferral and notifications",
+        show: ["lifecycle"],
+        target: "evidence-summary",
+        modal: "snooze",
+      },
+      7: {
+        title: "Clear triage and outcome states",
+        description: "Uses To review, Active, Resolved, and Ignored while treating Snooze as an attention action.",
+        theme: "Lifecycle and ownership",
+        show: ["lifecycle", "lifecycle-model"],
+        target: "lifecycle-preview",
+      },
+      8: {
+        title: "Return reason and issue history",
+        description: "Shows why the issue returned, what changed, and the previous triage or fix decision.",
+        theme: "Return and recurrence",
+        show: ["history"],
+        target: "history",
+        returned: true,
+      },
+      9: {
+        title: "Structured dismissal feedback",
+        description: "Records whether Engine was wrong, behavior was expected, or the team intentionally accepted the risk.",
+        theme: "Lifecycle and feedback",
+        show: ["lifecycle"],
+        target: "evidence-summary",
+        modal: "dismiss",
+      },
+    };
+
+    function setConceptBanner(index, title, description, theme) {
+      conceptBanner.classList.remove("hidden");
+      document.getElementById("concept-index").textContent = index;
+      document.getElementById("concept-title").textContent = title;
+      document.getElementById("concept-description").textContent = description;
+      document.getElementById("concept-theme").textContent = theme;
+    }
+
+    function clearControlSelection() {
+      document.querySelectorAll(".concept-option, .scenario-button").forEach((button) => button.classList.remove("selected"));
+    }
+
+    function showConcept(id) {
+      const concept = conceptDefinitions[id];
+      opportunities.forEach((name) => setOpportunity(name, false));
+      concept.show.forEach((name) => setOpportunity(name, true));
+      returnBanner.classList.toggle("hidden", !concept.returned);
+      fixWorkspace.classList.toggle("validation-focus", Boolean(concept.validationOnly));
+      statusPill.textContent = concept.returned ? "○ To review · Returned⌄" : id === "5" || id === "4" ? "○ Active⌄" : "○ To review⌄";
+      setConceptBanner(String(id).padStart(2, "0"), concept.title, concept.description, concept.theme);
+      clearControlSelection();
+      document.querySelector(`[data-concept="${id}"]`)?.classList.add("selected");
+      document.getElementById(concept.target)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (concept.modal) setTimeout(() => openModal(concept.modal), 220);
+    }
+
+    document.querySelectorAll("[data-concept]").forEach((button) => button.addEventListener("click", () => showConcept(button.dataset.concept)));
+
+    function applyPreset(preset) {
+      clearControlSelection();
+      document.querySelector(`[data-preset="${preset}"]`)?.classList.add("selected");
+      fixWorkspace.classList.remove("validation-focus");
+      if (preset === "baseline") {
+        opportunities.forEach((name) => setOpportunity(name, false));
+        returnBanner.classList.add("hidden");
+        conceptBanner.classList.add("hidden");
+        statusPill.textContent = "○ Open⌄";
+        document.getElementById("detail").scrollTo({ top: 0, behavior: "smooth" });
+      }
+      if (preset === "all") {
+        opportunities.forEach((name) => setOpportunity(name, true));
+        setOpportunity("lifecycle-model", false);
+        returnBanner.classList.add("hidden");
+        setConceptBanner("ALL", "Combined design proposal", "All nine opportunities are enabled. Use the ✦ control to isolate and review each concept.", "All themes");
+        statusPill.textContent = "○ To review⌄";
+        document.getElementById("detail").scrollTo({ top: 0, behavior: "smooth" });
+      }
+      if (preset === "returned") {
+        opportunities.forEach((name) => setOpportunity(name, true));
+        setOpportunity("lifecycle-model", false);
+        returnBanner.classList.remove("hidden");
+        setConceptBanner("08", "Return reason and issue history", "The issue returned because its recurrence condition was met. New evidence is compared with the previous snapshot.", "Return and recurrence");
+        statusPill.textContent = "○ To review · Returned⌄";
+        document.getElementById("detail").scrollTo({ top: 0, behavior: "smooth" });
+      }
+      if (preset === "fix") {
+        opportunities.forEach((name) => setOpportunity(name, true));
+        setOpportunity("lifecycle-model", false);
+        returnBanner.classList.add("hidden");
+        setConceptBanner("05", "Unified, resumable Fix workspace", "The developer returns to current artifacts, a commit-bound validation result, and one recommended next action.", "Fix and continuity");
+        statusPill.textContent = "○ Active⌄";
+        setValidationState("failed");
+        document.getElementById("fix-workspace").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+    document.querySelectorAll("[data-preset]").forEach((button) => button.addEventListener("click", () => applyPreset(button.dataset.preset)));
+
+    const validationStates = {
+      missing: ["?", "Validation not run", "No experiment result exists for the current PR commit.", "Run validation", "Run the three issue-specific examples against PR commit 8f42c1a.", "warn"],
+      stale: ["↻", "Validation result is stale", "The latest experiment tested an earlier PR commit.", "Rerun validation", "Rerun affected examples against commit 8f42c1a.", "warn"],
+      failed: ["!", "Latest validation failed", "Two of three issue-specific examples still produce a false success response.", "Review 2 failures", "Update retry handling, then rerun affected examples.", "fail"],
+      passing: ["✓", "Latest validation passed", "All issue-specific examples passed on the current PR commit.", "Review and merge", "Review remaining risk, then merge PR #142.", "ready"],
+    };
+    function setValidationState(state) {
+      const data = validationStates[state];
+      const icon = document.getElementById("result-icon");
+      icon.textContent = data[0];
+      icon.style.background = state === "passing" ? "var(--green-soft)" : state === "failed" ? "var(--red-soft)" : "var(--amber-soft)";
+      icon.style.color = state === "passing" ? "var(--green)" : state === "failed" ? "var(--red)" : "var(--amber)";
+      document.getElementById("validation-title").textContent = data[1];
+      document.getElementById("validation-copy").textContent = data[2];
+      document.getElementById("validation-action").textContent = data[3];
+      document.getElementById("next-step").textContent = data[4];
+      document.getElementById("validation-select").value = state;
+    }
+    document.getElementById("validation-select").addEventListener("change", (event) => setValidationState(event.target.value));
+
+    function openModal(name) {
+      document.getElementById(`modal-${name}`)?.classList.remove("hidden");
+      controlPanel.classList.add("hidden");
+    }
+    function closeModals() {
+      document.querySelectorAll(".modal-backdrop").forEach((modal) => modal.classList.add("hidden"));
+    }
+    document.querySelectorAll("[data-modal]").forEach((button) => button.addEventListener("click", () => openModal(button.dataset.modal)));
+    document.querySelectorAll("[data-close-modal]").forEach((button) => button.addEventListener("click", closeModals));
+    document.querySelectorAll(".modal-backdrop").forEach((modal) => {
+      modal.addEventListener("click", (event) => { if (event.target === modal) closeModals(); });
+    });
+    document.addEventListener("keydown", (event) => { if (event.key === "Escape") { closeModals(); controlPanel.classList.add("hidden"); } });
+
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("visible"), 3200);
+    }
+
+    document.getElementById("save-snooze").addEventListener("click", () => {
+      closeModals();
+      statusPill.textContent = "○ Snoozed until recurrence⌄";
+      showToast("Issue snoozed. It will return to To review when the pattern recurs and notify #agent-quality.");
+    });
+    document.getElementById("save-dismiss").addEventListener("click", () => {
+      closeModals();
+      statusPill.textContent = "○ Ignored⌄";
+      showToast("Issue ignored. Reason recorded: Incorrectly flagged.");
+    });
+    document.getElementById("save-examples").addEventListener("click", () => {
+      closeModals();
+      document.getElementById("examples-state").textContent = "3 ready";
+      showToast("Added 3 examples to authentication-recovery-regressions.");
+    });
+    document.getElementById("mark-resolved").addEventListener("click", () => {
+      statusPill.textContent = "○ Resolved⌄";
+      showToast("Issue resolved. Fix and validation history preserved.");
+    });
+    document.getElementById("copy-fix").addEventListener("click", () => {
+      navigator.clipboard?.writeText("Handle structured authentication failures, refresh credentials, retry once, and prevent false success responses.");
+      showToast("Fix context copied.");
+    });
+
+    document.querySelectorAll(".view-tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".view-tab").forEach((item) => item.classList.remove("active"));
+        tab.classList.add("active");
+        showToast(`${tab.textContent} view selected.`);
+      });
+    });
+  </script>
+</body>
+</html>

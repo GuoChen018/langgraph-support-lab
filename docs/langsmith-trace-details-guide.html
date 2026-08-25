@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LangSmith Trace Details Guide</title>
+  <style>
+    @font-face { font-family: Inter; src: url("./assets/engine-opportunity-prototype/inter-400.ttf"); font-weight: 400; }
+    @font-face { font-family: Inter; src: url("./assets/engine-opportunity-prototype/inter-500.ttf"); font-weight: 500; }
+    :root {
+      --text: #0f172a;
+      --secondary: #475569;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --soft: #f8fafc;
+      --blue: #309fff;
+      --red: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #fff; color: var(--text); font-family: Inter, sans-serif; font-size: 14px; line-height: 1.55; }
+    a { color: #0875c1; }
+    button { font: inherit; }
+    .page { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 48px 0 80px; }
+    .eyebrow { margin: 0 0 8px; color: var(--muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { max-width: 760px; margin: 0; font-size: 34px; font-weight: 500; line-height: 1.15; letter-spacing: -.03em; }
+    .lede { max-width: 760px; margin: 16px 0 0; color: var(--secondary); font-size: 16px; }
+    h2 { margin: 0 0 8px; font-size: 20px; font-weight: 500; letter-spacing: -.02em; }
+    h3 { margin: 0 0 5px; font-size: 14px; font-weight: 500; }
+    p { margin: 0; }
+    section { margin-top: 48px; }
+    .note { margin-top: 20px; padding: 12px 14px; border: 1px solid #b2ddff; border-radius: 6px; background: #f5fbff; color: #175cd3; }
+    .concept-flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+    .concept { position: relative; min-height: 116px; padding: 16px; border: 1px solid var(--line); border-radius: 7px; background: #fff; }
+    .concept:not(:last-child)::after { position: absolute; top: 50%; right: -10px; z-index: 1; width: 7px; height: 7px; transform: rotate(-45deg); border-right: 1px solid var(--muted); border-bottom: 1px solid var(--muted); content: ""; }
+    .concept span { display: block; margin-top: 8px; color: var(--secondary); font-size: 13px; }
+    .view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .view-card { overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .view-head { padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--soft); }
+    .view-body { padding: 16px; }
+    .view-body ul { margin: 10px 0 0; padding-left: 18px; color: var(--secondary); }
+    .view-body li + li { margin-top: 5px; }
+    .mock-thread { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .mock-message { display: grid; grid-template-columns: 20px minmax(0,1fr); gap: 8px; }
+    .mock-message .box { padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; font-size: 12px; }
+    .mock-message.user .box { background: #f1f5f9; }
+    .mock-tree { margin-top: 14px; padding: 10px; border: 1px solid var(--line); border-radius: 5px; }
+    .tree-row { display: flex; align-items: center; gap: 8px; min-height: 29px; font-size: 12px; }
+    .tree-row.depth-1 { padding-left: 20px; }
+    .tree-row.depth-2 { padding-left: 40px; }
+    .tree-row.selected { border-radius: 4px; background: #fef3f2; }
+    .type-icon, .message-icon {
+      display: grid;
+      width: 16px;
+      height: 16px;
+      flex: 0 0 16px;
+      place-items: center;
+      padding: 2px;
+      border-radius: 2px;
+      background: #309fff;
+    }
+    .type-icon img, .message-icon img { display: block; width: 100%; height: 100%; }
+    .type-icon.root { background: #2f4b68; }
+    .type-icon.tool { background: #00805e; }
+    .type-icon.llm { background: #ff7805; }
+    .type-icon.prompt { background: #9b5ce8; }
+    .type-icon.retriever { background: #ffd0e8; }
+    .type-icon.parser { background: #b8dde4; }
+    .type-icon.runnable { background: #cce2ff; }
+    .message-icon.user { background: #1380fa; }
+    .message-icon.ai { background: #ff7805; }
+    .message-icon.system { background: #5b7f06; }
+    .message-icon.tool { background: #00805e; }
+    .message-icon.reasoning { background: #fed7aa; }
+    .run-types, .message-types { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-top: 16px; }
+    .type-row { display: grid; grid-template-columns: 18px minmax(120px,.35fr) minmax(0,1fr); gap: 10px; align-items: start; padding: 12px; border: 1px solid var(--line); border-radius: 6px; }
+    .type-row p { color: var(--secondary); font-size: 12px; }
+    code { padding: 1px 4px; border-radius: 3px; background: #f1f5f9; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .details-anatomy { display: grid; grid-template-columns: 280px minmax(0,1fr); overflow: hidden; margin-top: 16px; border: 1px solid var(--line); border-radius: 8px; }
+    .details-tree { padding: 14px; border-right: 1px solid var(--line); background: var(--soft); }
+    .inspector { padding: 14px; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+    .tab { padding: 5px 9px; border: 0; border-radius: 4px; background: transparent; color: var(--secondary); font-size: 12px; }
+    .tab.active { background: #f1f5f9; color: var(--text); }
+    .panel { margin-top: 12px; }
+    .panel-title { display: flex; justify-content: space-between; margin-bottom: 6px; color: var(--secondary); font-size: 12px; }
+    .panel-card { padding: 12px; border: 1px solid var(--line); border-radius: 5px; background: #fff; font-size: 12px; }
+    .specialized { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 14px; }
+    .specialized div { padding: 12px; border: 1px solid var(--line); border-radius: 5px; }
+    .specialized span { display: block; margin-top: 4px; color: var(--secondary); font-size: 12px; }
+    .issue-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-top: 16px; }
+    .issue-card { padding: 14px; border: 1px solid var(--line); border-radius: 6px; }
+    .issue-card p { color: var(--secondary); font-size: 12px; }
+    .issue-card .path { margin-top: 8px; color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; overflow-wrap: anywhere; }
+    .decision { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: stretch; margin-top: 16px; }
+    .decision-card { padding: 16px; border: 1px solid var(--line); border-radius: 7px; }
+    .decision-card.recommended { border-color: #b2ddff; background: #f5fbff; }
+    .decision-arrow { display: grid; place-items: center; color: var(--muted); }
+    .sources { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .sources a { padding: 6px 9px; border: 1px solid var(--line); border-radius: 4px; text-decoration: none; }
+    @media (max-width: 760px) {
+      .concept-flow, .view-grid, .run-types, .message-types, .issue-grid, .specialized { grid-template-columns: 1fr; }
+      .concept:not(:last-child)::after { display: none; }
+      .details-anatomy { grid-template-columns: 1fr; }
+      .details-tree { border-right: 0; border-bottom: 1px solid var(--line); }
+      .decision { grid-template-columns: 1fr; }
+      .decision-arrow { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <p class="eyebrow">LangSmith observability reference</p>
+    <h1>How to read a LangSmith trace</h1>
+    <p class="lede">A trace is not one generic stack of “agent steps.” Its run types determine how LangSmith renders each operation, while Messages and Details answer different debugging questions.</p>
+
+    <section>
+      <h2>The observability hierarchy</h2>
+      <div class="concept-flow">
+        <article class="concept"><h3>Thread</h3><span>A multi-turn session. Traces join a thread when they share <code>thread_id</code>.</span></article>
+        <article class="concept"><h3>Trace</h3><span>All runs created by one operation or turn. The trace ID equals its root run ID.</span></article>
+        <article class="concept"><h3>Run / span</h3><span>One unit of work: a model call, tool invocation, retrieval, prompt render, parser, or chain.</span></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Messages and Details are complementary</h2>
+      <p>Use Messages to orient in the conversation. Use Details to inspect a selected run.</p>
+      <div class="view-grid">
+        <article class="view-card">
+          <div class="view-head"><h3>Messages · trajectory view</h3><p>“What did the agent do and say?”</p></div>
+          <div class="view-body">
+            <ul>
+              <li>Flattens nested runs into an ordered conversation.</li>
+              <li>Shows AI responses, grouped tool calls and tool results, thoughts, and subagent actions.</li>
+              <li>Requires compatible message data; thread behavior also depends on <code>thread_id</code> and agent metadata.</li>
+            </ul>
+            <div class="mock-thread">
+              <div class="mock-message user"><span class="message-icon user"><img src="./assets/engine-opportunity-prototype/icon-user-figma.svg" alt=""></span><div class="box">What happens if I cancel my plan?</div></div>
+              <div class="mock-message"><span class="message-icon ai"><img src="./assets/engine-opportunity-prototype/icon-anthropic.svg" alt=""></span><div class="box">Tool call · <code>cancel_subscription</code></div></div>
+              <div class="mock-message"><span class="message-icon tool"><img src="./assets/engine-opportunity-prototype/icon-run-tool.svg" alt=""></span><div class="box">Tool result · <code>{"status":"cancelled"}</code></div></div>
+            </div>
+          </div>
+        </article>
+        <article class="view-card">
+          <div class="view-head"><h3>Details · run inspector</h3><p>“What happened inside this exact run?”</p></div>
+          <div class="view-body">
+            <ul>
+              <li>Preserves the nested trace tree and currently selected run.</li>
+              <li>Shows feedback, typed input, output, errors, timing, tokens, cost, and attributes.</li>
+              <li>The right side changes when a different run is selected.</li>
+            </ul>
+            <div class="mock-tree">
+              <div class="tree-row"><span class="type-icon root"><img src="./assets/engine-opportunity-prototype/icon-run-root.svg" alt=""></span>subscription_support_agent</div>
+              <div class="tree-row depth-1"><span class="type-icon llm"><img src="./assets/engine-opportunity-prototype/icon-run-llm.svg" alt=""></span>ChatAnthropic</div>
+              <div class="tree-row depth-2 selected"><span class="type-icon tool"><img src="./assets/engine-opportunity-prototype/icon-run-tool.svg" alt=""></span>cancel_subscription</div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="note"><strong>Engine design implication:</strong> the initial evidence view should show the compact trace or trajectory needed for triage, not reproduce the full Details inspector. Selecting a run or choosing “View More” can open LangSmith at that run.</div>
+    </section>
+
+    <section>
+      <h2>Run types in the trace tree</h2>
+      <p>These types come from the run’s <code>run_type</code>. LangSmith uses them for icons and specialized rendering.</p>
+      <div class="run-types">
+        <article class="type-row"><span class="type-icon root"><img src="./assets/engine-opportunity-prototype/icon-run-root.svg" alt=""></span><h3>Root</h3><p>The top-level run for a trace. “Root” is a tree position, not a separate official <code>run_type</code>.</p></article>
+        <article class="type-row"><span class="type-icon"><img src="./assets/engine-opportunity-prototype/icon-run-chain.svg" alt=""></span><h3><code>chain</code></h3><p>A sequence, graph node, routing step, or composition of operations.</p></article>
+        <article class="type-row"><span class="type-icon llm"><img src="./assets/engine-opportunity-prototype/icon-run-llm.svg" alt=""></span><h3><code>llm</code></h3><p>A model call. Details can show messages, first-token time, tokens, model, and cost.</p></article>
+        <article class="type-row"><span class="type-icon tool"><img src="./assets/engine-opportunity-prototype/icon-run-tool.svg" alt=""></span><h3><code>tool</code></h3><p>A function or external action selected by the model. Tool messages auto-expand in Details.</p></article>
+        <article class="type-row"><span class="type-icon prompt"><img src="./assets/engine-opportunity-prototype/icon-run-prompt.svg" alt=""></span><h3><code>prompt</code></h3><p>A prompt template formatting inputs before a model call.</p></article>
+        <article class="type-row"><span class="type-icon retriever"><img src="./assets/engine-opportunity-prototype/icon-run-retriever.svg" alt=""></span><h3><code>retriever</code></h3><p>A document lookup. Properly formatted outputs render documents and metadata inline.</p></article>
+        <article class="type-row"><span class="type-icon parser"><img src="./assets/engine-opportunity-prototype/icon-run-parser.svg" alt=""></span><h3><code>parser</code></h3><p>Transforms raw model or retrieval output into structured data.</p></article>
+        <article class="type-row"><span class="type-icon runnable"><img src="./assets/engine-opportunity-prototype/icon-run-sequence.svg" alt=""></span><h3>RunnableSequence</h3><p>A LangChain visual subtype of <code>chain</code>: steps execute in sequence.</p></article>
+        <article class="type-row"><span class="type-icon runnable"><img src="./assets/engine-opportunity-prototype/icon-run-parallel.svg" alt=""></span><h3>RunnableParallel</h3><p>A LangChain visual subtype of <code>chain</code>: branches can execute concurrently.</p></article>
+        <article class="type-row"><span class="type-icon"><img src="./assets/engine-opportunity-prototype/icon-run-chain.svg" alt=""></span><h3><code>embedding</code></h3><p>An embedding API call. LangSmith currently displays it with the chain icon.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>What appears in the selected-run inspector</h2>
+      <div class="details-anatomy">
+        <div class="details-tree">
+          <h3>Trace tree</h3>
+          <div class="tree-row"><span class="type-icon root"><img src="./assets/engine-opportunity-prototype/icon-run-root.svg" alt=""></span>refund_policy_rag</div>
+          <div class="tree-row depth-1"><span class="type-icon retriever"><img src="./assets/engine-opportunity-prototype/icon-run-retriever.svg" alt=""></span>billing_policy_retriever</div>
+          <div class="tree-row depth-1 selected"><span class="type-icon llm"><img src="./assets/engine-opportunity-prototype/icon-run-llm.svg" alt=""></span>ChatAnthropic</div>
+        </div>
+        <div class="inspector">
+          <div class="tabs"><span class="tab active">Feedback</span><span class="tab">Input</span><span class="tab">Output</span><span class="tab">Attributes</span></div>
+          <div class="panel"><div class="panel-title"><span>Input</span><span>Markdown⌄</span></div><div class="panel-card"><strong>System</strong><br>Answer only from retrieved policy text.<br><br><strong>User</strong><br>Can I refund my annual plan after 45 days?</div></div>
+          <div class="panel"><div class="panel-title"><span>Output</span><span>Messages</span></div><div class="panel-card"><strong>AI</strong><br>Yes. Annual plans are refundable within 60 days.</div></div>
+        </div>
+      </div>
+      <div class="specialized">
+        <div><h3>LLM run</h3><span>Messages, model, latency, first-token time, token counts, and cost.</span></div>
+        <div><h3>Tool run</h3><span>Tool name, arguments, result, thrown error, and implementation metadata.</span></div>
+        <div><h3>Retriever run</h3><span>Query plus each retrieved document’s content and metadata.</span></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Message roles</h2>
+      <p>Message roles describe conversation content inside LLM inputs/outputs and the Messages trajectory. They are different from run types.</p>
+      <div class="message-types">
+        <article class="type-row"><span class="message-icon user"><img src="./assets/engine-opportunity-prototype/icon-user-figma.svg" alt=""></span><h3>Human / User</h3><p>The end user’s request or follow-up.</p></article>
+        <article class="type-row"><span class="message-icon ai"><img src="./assets/engine-opportunity-prototype/icon-anthropic.svg" alt=""></span><h3>AI</h3><p>Model text, tool calls, structured response content, and associated model metadata.</p></article>
+        <article class="type-row"><span class="message-icon system"><img src="./assets/engine-opportunity-prototype/icon-alert.svg" alt=""></span><h3>System</h3><p>High-priority behavior and policy instructions sent to the model.</p></article>
+        <article class="type-row"><span class="message-icon tool"><img src="./assets/engine-opportunity-prototype/icon-run-tool.svg" alt=""></span><h3>Tool</h3><p>The result paired to a model tool call, usually by tool-call ID.</p></article>
+        <article class="type-row"><span class="type-icon parser"><img src="./assets/engine-opportunity-prototype/icon-run-parser.svg" alt=""></span><h3>Function</h3><p>A legacy or provider-specific function-call message. Modern tool calling usually uses Tool.</p></article>
+        <article class="type-row"><span class="type-icon parser"><img src="./assets/engine-opportunity-prototype/icon-run-parser.svg" alt=""></span><h3>Unknown</h3><p>Fallback rendering when LangSmith cannot map a message to a recognized role.</p></article>
+        <article class="type-row"><span class="type-icon parser"><img src="./assets/engine-opportunity-prototype/icon-run-parser.svg" alt=""></span><h3>Additional Fields</h3><p>Provider-specific or structured fields that are not the primary visible message content.</p></article>
+        <article class="type-row"><span class="message-icon reasoning"><img src="./assets/engine-opportunity-prototype/icon-stars.svg" alt=""></span><h3>Reasoning / Thought</h3><p>Extended-thinking content shown inline and collapsed by default when available.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Realistic trace shapes vary by issue</h2>
+      <div class="issue-grid">
+        <article class="issue-card"><h3>Silent authentication failure</h3><p>Failure lives in a state-changing tool and its shared HTTP client; the final model compounds it by claiming success.</p><div class="path">agent → ToolNode → account tool → HTTP 401/403 → route_after_tool → LLM</div></article>
+        <article class="issue-card"><h3>Unsupported claim</h3><p>The retriever succeeds. The failure is the mismatch between retrieved evidence and the final LLM output.</p><div class="path">prompt → retriever → parser → grounded_answer → LLM</div></article>
+        <article class="issue-card"><h3>Agent loop</h3><p>Individual tool calls can succeed while the trajectory is inefficient because state and arguments do not change.</p><div class="path">agent_loop → LLM → ToolNode → repeated tool → loop_guard</div></article>
+        <article class="issue-card"><h3>Latency and cost</h3><p>No functional error is required. Critical-path spans, token accumulation, and parallelism reveal the issue.</p><div class="path">parallel retrieval → context assembly → slow high-token LLM</div></article>
+        <article class="issue-card"><h3>Prompt regression</h3><p>The prompt version and route explain why required clarification steps disappeared.</p><div class="path">prompt v43 → intake → route → agent → premature diagnosis</div></article>
+        <article class="issue-card"><h3>Wrong destructive tool</h3><p>The mutation succeeds technically. The problem is intent classification and a skipped confirmation gate.</p><div class="path">tool schema → classify → agent → destructive tool → missing gate</div></article>
+        <article class="issue-card"><h3>Guardrail fail-open</h3><p>An unavailable policy decision should deny access, but routing leaves protected tools callable.</p><div class="path">authorization → policy timeout → fail-open route → protected tool → LLM</div></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Recommended disclosure for Engine</h2>
+      <div class="decision">
+        <article class="decision-card recommended"><h3>Initial issue evidence</h3><p>Compact linked traces, the important span centered in view, an issue-specific explanation, and Messages when the conversational outcome is decisive.</p></article>
+        <div class="decision-arrow">→</div>
+        <article class="decision-card"><h3>View More / selected run</h3><p>Open the full LangSmith Details experience with run input, output, feedback, errors, attributes, timing, tokens, and cost.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Official references</h2>
+      <div class="sources">
+        <a href="https://docs.langchain.com/langsmith/observability-concepts">Observability concepts</a>
+        <a href="https://docs.langchain.com/langsmith/run-data-format">Run data and run types</a>
+        <a href="https://docs.langchain.com/langsmith/view-traces">Messages, Turns, and Details</a>
+        <a href="https://docs.langchain.com/langsmith/messages-view-trace-format">Messages view integrations</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

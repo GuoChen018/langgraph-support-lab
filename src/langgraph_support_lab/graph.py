@@ -224,7 +224,7 @@ def build_graph(checkpointer=None):
     builder.add_edge("search_releases", "synthesize")
     builder.add_edge("synthesize", END)
 
-    return builder.compile(checkpointer=checkpointer)
+    return builder.compile(checkpointer=checkpointer, name="support_agent")
 
 
 graph = build_graph()
