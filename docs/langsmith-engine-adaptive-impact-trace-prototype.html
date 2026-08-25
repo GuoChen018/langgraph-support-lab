@@ -276,7 +276,7 @@
       visibility: hidden;
       white-space: nowrap;
     }
-    .bar-slot:hover .bar-tooltip { visibility: visible; }
+    .bar-slot:has(> .bar:hover) > .bar-tooltip { visibility: visible; }
     .chart-labels { display: flex; justify-content: space-between; margin-top: 5px; color: var(--quiet); font-size: 9px; }
     .impact-breakdown {
       display: flex;
@@ -984,7 +984,7 @@
     .issue-type-chip { padding: 4px 6px; border-radius: 4px; background: #e2f4ff; color: #16324f; font-size: 12px; font-weight: 500; line-height: 1.2; }
     .issue-count, .issue-age { color: var(--text-tertiary); font-size: 12px; }
     .page { width: 1079px; max-width: 100%; min-width: 0; margin: 0; padding: 0 0 80px; border-right: 1px solid var(--border-subtle); background: #fff; }
-    .issue-header { display: block; padding: 16px 20px 20px; border: 0; border-bottom: 1px solid var(--border-subtle); border-radius: 0; background: #fff; }
+    .issue-header { display: block; padding: 20px 24px; border: 0; border-bottom: 1px solid var(--border-subtle); border-radius: 0; background: #fff; }
     .issue-title-row { display: flex; align-items: center; gap: 8px; }
     .issue-header h1 { font-size: 18px; line-height: 1.2; letter-spacing: -.04em; }
     .link-glyph { color: #64748b; font-size: 15px; }
@@ -1002,14 +1002,14 @@
     .updated-copy { color: var(--text-quaternary); font-size: 13px; }
     .header-actions { display: none; }
     .diagnosis { max-width: none; margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.5; }
-    .content-section { margin: 0; padding: 12px 20px 0; }
-    .section { margin: 0; padding: 40px 20px 0; }
+    .content-section { margin: 0; padding: 12px 24px 0; }
+    .section { margin: 0; padding: 40px 24px 0; }
     .section-heading { align-items: center; margin-bottom: 12px; }
     .section:has(.evidence-workspace) > .section-heading { margin-bottom: 14px; }
     .section-heading h2, .content-section h2, .next-steps-head h2 { color: var(--text-primary); font-size: 16px; line-height: 1.2; letter-spacing: -.04em; }
     .section-heading h2, .next-steps-head h2 { margin: 0; }
     .content-section h2 { margin-bottom: 8px; }
-    p, .diagnosis, .trace-preview-summary, .next-action-detail, .artifact-summary, .message-flag, .chart-event-popover p { text-wrap: pretty; }
+    p, .diagnosis, .trace-preview-summary, .message-agent, .trajectory-content, .next-action-detail, .artifact-summary, .setup-callout .muted, .message-flag, .chart-event-popover p { text-wrap: pretty; }
     .section-note, #impact-coverage, #trace-note { display: none; }
     .impact-card { container-type: inline-size; border-color: var(--border-subtle); border-radius: 4px; }
     .impact-groups, .impact-breakdown, .chart-title, .chart-labels { display: none !important; }
@@ -1024,13 +1024,38 @@
     .bars { height: 125px; gap: 4px; margin: 0; overflow: visible; padding: 0 13px; border: 0; background: none; }
     .bars .bar-slot { height: 85px; box-sizing: border-box; align-self: flex-start; padding: 0 2px; }
     .bar { border-radius: 4px; background: #4499f7; }
+    .bars.line-chart { position: relative; display: block; padding: 0; }
+    .line-plot { position: absolute; inset: 0 13px 28px; }
+    .line-chart-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+    .line-chart-path { fill: none; stroke: #4499f7; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; vector-effect: non-scaling-stroke; }
+    .line-point-slot { position: absolute; top: 0; bottom: 0; width: 1px; }
+    .line-point { position: absolute; top: 0; bottom: 0; left: 0; z-index: 2; width: var(--hit-width); height: auto; padding: 0; transform: translateX(-50%); border: 0; background: transparent; }
+    .line-point-slot.first .line-point { width: calc(var(--hit-width) / 2); transform: none; }
+    .line-point-slot.last .line-point { width: calc(var(--hit-width) / 2); transform: translateX(-100%); }
+    .line-point::before { position: absolute; bottom: var(--point-y); left: 50%; z-index: 2; width: 6px; height: 6px; transform: translate(-50%, 50%); border: 1.5px solid #fff; border-radius: 50%; opacity: 0; background: #4499f7; box-shadow: 0 0 0 1px #4499f7; content: ""; }
+    .line-point::after { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; border-left: 1px solid #cbd5e1; opacity: 0; content: ""; }
+    .line-point-slot.first .line-point::before { left: 0; }
+    .line-point-slot.last .line-point::before { left: 100%; }
+    .line-point-slot.first .line-point::after { left: 0; }
+    .line-point-slot.last .line-point::after { left: 100%; }
+    .line-point-tooltip { position: absolute; bottom: calc(var(--point-y) + 14px); left: 50%; z-index: 3; display: none; min-width: max-content; padding: 5px 7px; transform: translateX(-50%); border: 1px solid var(--border-subtle); border-radius: 4px; background: #fff; box-shadow: var(--shadow-xs); color: var(--text-secondary); font-size: 11px; font-weight: 500; line-height: 1.2; white-space: nowrap; }
+    .line-point-slot.first .line-point-tooltip { left: 0; transform: none; }
+    .line-point-slot.last .line-point-tooltip { right: 0; left: auto; transform: none; }
+    .line-point:hover { z-index: 25; }
+    .line-point:hover::before, .line-point:hover::after { opacity: 1; }
+    .line-point:hover .line-point-tooltip { display: block; }
+    .line-x-label { position: absolute; top: calc(100% + 17px); left: 0; transform: translateX(-50%); color: var(--text-tertiary); font-size: 9px; line-height: 11px; white-space: nowrap; }
+    .line-x-label.first { transform: none; }
+    .line-x-label.last { transform: translateX(-100%); }
+    .line-point-slot .chart-event { left: 0; z-index: 6; }
     .bar-tooltip { bottom: calc(var(--bar-height) + 4px); min-width: 32px; width: 32px; padding: 4px; font-size: 11px; line-height: 14px; }
     .chart-event { position: absolute; top: 0; bottom: auto; left: 50%; z-index: 3; width: 1px; height: 87px; border-left: 1px dashed #667085; pointer-events: none; }
     .chart-event-icon { position: absolute; top: 89px; left: -8px; display: flex; width: 16px; height: 16px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; background: #4499f7; box-shadow: var(--shadow-xs); color: #fff; pointer-events: none; }
     .chart-event-icon .inline-svg { width: 11.08px; height: 11.08px; }
     .chart-event-icon .inline-svg path[fill]:not([fill="none"]) { fill: #fff !important; }
     .chart-event-icon .inline-svg path[stroke]:not([stroke="none"]) { stroke: #fff !important; }
-    .chart-event-icon.interactive { pointer-events: auto; cursor: pointer; }
+    .chart-event-icon.interactive { pointer-events: auto; cursor: pointer; transition: background-color 120ms ease, box-shadow 120ms ease; }
+    .chart-event-icon.interactive:hover, .chart-event-icon.interactive:focus-visible { background: #2f83dc; box-shadow: 0 0 0 2px rgba(68,153,247,.16), var(--shadow-xs); }
     .chart-event-icon.interactive::after { position: absolute; top: -14px; left: 100%; width: 12px; height: 44px; content: ""; }
     .chart-event-popover { position: absolute; right: auto; bottom: -2px; left: 12px; z-index: 5; display: flex; visibility: hidden; width: 300px; min-height: 96px; flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; transform: translateY(4px); border: 0; border-radius: 8px; opacity: 0; background: #fff; box-shadow: 0 0 0 1px rgba(16,24,40,.06), 0 12px 16px -4px rgba(16,24,40,.08), 0 4px 6px -2px rgba(16,24,40,.03); filter: blur(0); color: var(--text-primary); font-size: 13px; pointer-events: none; transition: opacity 140ms ease-out, transform 140ms ease-out, visibility 0s linear 140ms; }
     .chart-event.open-left .chart-event-popover { right: 12px; left: auto; }
@@ -1170,7 +1195,7 @@
     .message-highlight { border-radius: 2px; background: #fef3f2; box-shadow: 0 0 0 2px #fef3f2; color: #b42318; font-weight: 400; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
     .message-flag { display: flex; align-items: flex-start; gap: 5px; margin-top: 10px; color: #d92d20; font-size: 11px; line-height: 1.45; }
     .message-flag .inline-svg { width: 12px; height: 12px; margin-top: 2px; }
-    .next-steps { overflow: visible; margin: 0; padding: 40px 20px 0; border: 0; border-radius: 0; }
+    .next-steps { overflow: visible; margin: 0; padding: 40px 24px 0; border: 0; border-radius: 0; }
     .next-steps-head { margin-bottom: 12px; padding: 0; border: 0; }
     .next-steps-head h2, .section-heading h2, .content-section h2, .representative-head strong { font-weight: 500 !important; }
     .next-steps-head span { display: none; }
@@ -1594,8 +1619,8 @@
         metrics: [
           ["Prevalence", "Affected traces", "46", "of 525 · 8.8%", "bad"],
           ["Reach", "Affected threads", "39", "of 418 · 9.3%", "bad"],
-          ["Affected unit", "Calls in affected loops", "231", "5.0 per trace · $18.42 excess cost", "bad"],
-          ["Consequence", "Threads waiting over 20s", "17", "44% of affected threads", "warn"]
+          ["Affected unit", "Excess tool cost", "$18.42", "Across affected traces", "bad"],
+          ["Consequence", "Added P50 latency", "18.6s", "From repeated tool and model calls", "warn"]
         ],
         chart: ["Repeated calls over time", "Count · Daily", [8,12,11,16,10,14,13,22,18,16,21,25,15,19,24,17,28,26,20,27,22,29]],
         traceNote: "Collapsing identical calls and showing repetition, added latency, and cost.",
@@ -1619,8 +1644,8 @@
         metrics: [
           ["Prevalence", "Slow traces", "92", "of 720 · 12.8%", "bad"],
           ["Reach", "Affected threads", "84", "of 560 · 15%", "bad"],
-          ["Affected unit", "Slow model calls", "106", "of 1,040 · 10.2%", "bad"],
-          ["Consequence", "Threads waiting over 10s", "49", "58% of affected threads", "warn"]
+          ["Affected unit", "P50 synthesis latency", "10.98s", "89% of end-to-end latency", "bad"],
+          ["Consequence", "Excess model cost", "$7.36", "From duplicated context", "warn"]
         ],
         chart: ["Slow traces over time", "Count · 6-hour window", [4,5,4,6,5,7,6,9,8,7,11,10,8,12,11,14,13,11,15,14,12,16]],
         traceNote: "Showing the critical path, token accumulation, and slowest span.",
@@ -2353,17 +2378,37 @@
           renderImpact(issue);
         });
       });
-      const total = Number.parseInt(metrics[selectedMetric][2].replaceAll(",", ""), 10);
       const source = issue.chart[2].map((_, index, items) => items[(index + selectedMetric * 3) % items.length]);
-      const weightTotal = source.reduce((sum, value) => sum + value, 0);
-      const exact = source.map(value => (value / weightTotal) * total);
-      const values = exact.map(value => Math.floor(value));
-      const remainder = total - values.reduce((sum, value) => sum + value, 0);
-      exact
-        .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
-        .sort((a, b) => b.fraction - a.fraction)
-        .slice(0, remainder)
-        .forEach(({ index }) => { values[index] += 1; });
+      const lineMetric = {
+        looping: {
+          2: { target: 18.42, mode: "total", prefix: "$", suffix: "", unit: "Daily excess cost" },
+          3: { target: 18.6, mode: "average", prefix: "", suffix: "s", unit: "Daily added P50 latency" }
+        },
+        latency: {
+          2: { target: 10.98, mode: "average", prefix: "", suffix: "s", unit: "Daily P50 synthesis latency" },
+          3: { target: 7.36, mode: "total", prefix: "$", suffix: "", unit: "Daily excess model cost" }
+        }
+      }[activeIssue]?.[selectedMetric];
+      const numericMetricValue = Number.parseFloat(metrics[selectedMetric][2].replace(/[^0-9.]/g, ""));
+      const total = Number.isFinite(numericMetricValue) ? numericMetricValue : 0;
+      let values;
+      if (lineMetric) {
+        const sourceTotal = source.reduce((sum, value) => sum + value, 0);
+        const sourceAverage = sourceTotal / source.length;
+        values = source.map(value => lineMetric.mode === "total"
+          ? (value / sourceTotal) * lineMetric.target
+          : (value / sourceAverage) * lineMetric.target);
+      } else {
+        const weightTotal = source.reduce((sum, value) => sum + value, 0);
+        const exact = source.map(value => (value / weightTotal) * total);
+        values = exact.map(value => Math.floor(value));
+        const remainder = total - values.reduce((sum, value) => sum + value, 0);
+        exact
+          .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
+          .sort((a, b) => b.fraction - a.fraction)
+          .slice(0, remainder)
+          .forEach(({ index }) => { values[index] += 1; });
+      }
       const metricLabel = titleCase(metrics[selectedMetric][1]);
       const title = `${metricLabel} Over Time`;
       const cadence = "6-hour window";
@@ -2375,20 +2420,27 @@
             ? `User-visible events · ${cadence}`
             : `Count · ${cadence}`;
       const max = Math.max(...values);
-      const axisStep = Math.max(1, Math.ceil(max / 3));
+      const axisStep = lineMetric
+        ? Math.max(.1, Math.ceil((max / 3) * 10) / 10)
+        : Math.max(1, Math.ceil(max / 3));
       const axisMax = axisStep * 3;
-      document.getElementById("axis-max").textContent = axisMax;
-      document.getElementById("axis-mid").textContent = axisStep * 2;
-      document.getElementById("axis-low").textContent = axisStep;
+      const formatChartValue = value => lineMetric
+        ? `${lineMetric.prefix}${value.toFixed(value >= 10 ? 1 : 2)}${lineMetric.suffix}`
+        : String(value);
+      document.getElementById("axis-max").textContent = formatChartValue(axisMax);
+      document.getElementById("axis-mid").textContent = formatChartValue(axisStep * 2);
+      document.getElementById("axis-low").textContent = formatChartValue(axisStep);
       document.getElementById("chart-title").textContent = title;
-      document.getElementById("chart-unit").textContent = `${unit} · Total ${total}${activeIssue === "prompt" ? " · Dark bar: v43 deployed" : ""}`;
+      document.getElementById("chart-unit").textContent = lineMetric
+        ? `${lineMetric.unit} · ${metrics[selectedMetric][2]}`
+        : `${unit} · Total ${total}${activeIssue === "prompt" ? " · Dark bar: v43 deployed" : ""}`;
       const chartEventsByIssue = {
         auth: {
-          6: { title:"Auth config updated", time:"Jun 13 · 7:06 AM", detail:"Access-token TTL: 90m → 60m", action:"View config", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
+          6: { title:"Access-token lifetime changed", time:"Jun 13 · 7:06 AM", detail:"Token lifetime: 90 minutes → 60 minutes", action:"View change", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
           14: { title:"Production deployment", time:"Jun 21 · 3:42 PM", detail:"PR #172 · Centralize account API client", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
         },
         hallucination: {
-          4: { title:"Knowledge index synced", time:"Jun 11 · 9:18 AM", detail:"Refund-policy corpus reindexed · 14 documents", action:"View change", marker:"icon-database.svg", actionIcon:"icon-database.svg" },
+          4: { title:"Refund policy documents reindexed", time:"Jun 11 · 9:18 AM", detail:"14 refund-policy documents were refreshed for retrieval", action:"View documents", marker:"icon-database.svg", actionIcon:"icon-database.svg" },
           15: { title:"Prompt deployed", time:"Jun 22 · 1:24 PM", detail:"refund-policy-rag · prompt v18", action:"View prompt", marker:"icon-run-prompt.svg", actionIcon:"icon-message.svg" }
         },
         looping: {
@@ -2427,13 +2479,53 @@
           </span>
         </span>`;
       };
-      document.getElementById("bars").innerHTML = values.map((value, index) => `
-        <div class="bar-slot" style="--bar-height:${value === 0 ? 0 : Math.max(4, (value / axisMax) * 100)}%">
-          <span class="bar-tooltip">${value}</span>
-          <div class="bar ${activeIssue === "prompt" && index === 5 ? "event" : ""}" style="height:${value === 0 ? 0 : Math.max(4, (value / axisMax) * 100)}%"></div>
-          ${renderChartEvent(index)}
-        </div>
-      `).join("");
+      const barsNode = document.getElementById("bars");
+      if (lineMetric) {
+        const dateLabel = index => {
+          const date = new Date(2026, 5, 7 + index);
+          return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        };
+        const points = values.map((value, index) => {
+          const x = (index / (values.length - 1)) * 100;
+          const y = 100 - (value / axisMax) * 100;
+          return `${x.toFixed(2)},${y.toFixed(2)}`;
+        }).join(" ");
+        barsNode.className = "bars line-chart";
+        barsNode.innerHTML = `<div class="line-plot">
+          <svg class="line-chart-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <polyline class="line-chart-path" points="${points}"></polyline>
+          </svg>
+          ${values.map((value, index) => {
+            const x = (index / (values.length - 1)) * 100;
+            const y = (value / axisMax) * 100;
+            const date = dateLabel(index);
+            const formattedValue = formatChartValue(value);
+            const showLabel = index === 0
+              || index === values.length - 1
+              || (index % 2 === 0 && index < values.length - 2);
+            const edgeClass = index === 0 ? " first" : index === values.length - 1 ? " last" : "";
+            return `<span class="line-point-slot${edgeClass}" style="left:${x.toFixed(2)}%;--point-y:${y.toFixed(2)}%">
+              <span class="line-point">
+                <span class="line-point-tooltip">${escapeHtml(date)} · ${escapeHtml(formattedValue)}</span>
+              </span>
+              ${showLabel ? `<span class="line-x-label${edgeClass}">${escapeHtml(date)}</span>` : ""}
+              ${renderChartEvent(index)}
+            </span>`;
+          }).join("")}
+        </div>`;
+        const linePlot = barsNode.querySelector(".line-plot");
+        const hitWidth = linePlot.clientWidth / (values.length - 1);
+        linePlot.querySelectorAll(".line-point-slot").forEach(slot => slot.style.setProperty("--hit-width", `${hitWidth}px`));
+      } else {
+        barsNode.className = "bars";
+        barsNode.innerHTML = values.map((value, index) => `
+          <div class="bar-slot" style="--bar-height:${value === 0 ? 0 : Math.max(4, (value / axisMax) * 100)}%">
+            <span class="bar-tooltip">${value}</span>
+            <div class="bar ${activeIssue === "prompt" && index === 5 ? "event" : ""}" style="height:${value === 0 ? 0 : Math.max(4, (value / axisMax) * 100)}%"></div>
+            ${renderChartEvent(index)}
+          </div>
+        `).join("");
+      }
       document.querySelectorAll(".chart-event-popover").forEach(popover => {
         const head = popover.querySelector(".chart-event-popover-head");
         const title = popover.querySelector(".chart-event-popover-title");
@@ -2947,7 +3039,7 @@
 +        )
 +
 +    return response`;
-      const codeFix = `<div class="artifact-summary">Refreshes expired credentials once and returns an explicit tool error for unrecovered ${formatParagraphCode("401/403")} responses, preventing false success.</div>
+      const codeFix = `<div class="artifact-summary">Refreshes expired credentials once and returns an explicit tool error for unrecovered ${formatParagraphCode("401/403")} responses, preventing false&nbsp;success.</div>
         <div class="code-card"><div class="code-card-head"><img class="icon" src="./assets/engine-opportunity-prototype/icon-code-01.svg" alt=""><strong>src/clients/account_api.py</strong>${diffCountBadges(codeFixSource)}<img class="icon" style="margin-left:auto" src="./assets/engine-opportunity-prototype/icon-link.svg" alt=""></div>
         <pre class="code-body">${renderHighlightedPythonDiff(codeFixSource)}</pre></div>`;
 
