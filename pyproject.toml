@@ -9,6 +9,7 @@ description = "A LangGraph developer-support agent for studying the LangSmith li
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "httpx",
     "langchain",
     "langgraph",
     "langsmith",

@@ -63,7 +63,7 @@ def required_facts_present(inputs, outputs, reference_outputs):
     text = (outputs.get("response") or "").lower()
     hits, misses = [], []
     for fact in facts:
-        tokens = [t for t in re.split(r"[^a-z0-9_.]+", fact.lower()) if len(t) > 3]
+        tokens = [t for t in re.split(r"[^a-z0-9_]+", fact.lower()) if len(t) > 3]
         matched = sum(1 for token in tokens if token in text)
         ok = matched >= max(1, len(tokens) // 2)
         (hits if ok else misses).append(fact)
@@ -87,6 +87,61 @@ def confidence_calibration(inputs, outputs, reference_outputs):
     return {"key": "confidence_calibration", "score": 1.0, "comment": "n/a"}
 
 
+def supportive_tone(inputs, outputs, reference_outputs):
+    response = (outputs.get("response") or "").strip()
+    lower = response.lower()
+    cold_phrases = [
+        "before i investigate, please provide",
+        "you must provide",
+        "required information:",
+    ]
+    collaborative_phrases = [
+        "i can help",
+        "could you share",
+        "this looks",
+        "it sounds like",
+        "you're hitting",
+        "you’re hitting",
+        "you're running into",
+        "you’re running into",
+        "your ",
+        "i don't",
+        "i can’t",
+        "i can't",
+        "let's",
+        "we can",
+    ]
+    report_markers = [
+        "## diagnosis",
+        "confidence:",
+        "what the evidence shows",
+        "what the evidence does not support",
+        "### summary",
+    ]
+
+    cold_hits = [phrase for phrase in cold_phrases if phrase in lower]
+    collaborative_hits = [phrase for phrase in collaborative_phrases if phrase in lower]
+    report_hits = [phrase for phrase in report_markers if phrase in lower]
+    should_clarify = bool(reference_outputs.get("should_clarify"))
+    has_rationale = any(phrase in lower for phrase in ["that will help", "that'll help", "help me"])
+
+    if cold_hits:
+        ok = False
+    elif should_clarify:
+        ok = bool(collaborative_hits) and has_rationale
+    else:
+        ok = bool(collaborative_hits) and len(report_hits) < 2
+
+    return {
+        "key": "supportive_tone",
+        "score": 1.0 if ok else 0.0,
+        "comment": (
+            f"collaborative={collaborative_hits}; cold={cold_hits}; "
+            f"report_style={report_hits}; rationale={has_rationale}"
+        ),
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -99,7 +154,12 @@ def main() -> None:
     results = evaluate(
         target,
         data="support-agent-baseline-v1",
-        evaluators=[clarification_match, required_facts_present, confidence_calibration],
+        evaluators=[
+            clarification_match,
+            required_facts_present,
+            confidence_calibration,
+            supportive_tone,
+        ],
         experiment_prefix=args.prefix,
         max_concurrency=1,
         metadata={"agent_version": args.prefix},

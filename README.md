@@ -12,15 +12,18 @@ architecture, evaluation plan, and current status.
 - Structured shared state
 - Standard chat messages and persistent conversation threads
 - Conditional routing for missing information
-- Parallel searches across docs, issues, and release notes
+- Parallel live searches across docs, GitHub issues, release notes, and Forum topics
+- Educational answers for LangChain concepts, relationships, and product workflows
 - Multi-turn clarification in the same thread
 - Deterministic synthesis without an API key
 - Optional model-backed synthesis
 - Automatic LangSmith tracing when configured
 - A customized Next.js chat interface based on Agent Chat UI
 
-The starter corpus is intentionally small and local. Its next iteration will
-replace the local searches with real LangChain documentation and GitHub tools.
+Live retrieval is enabled by default in hybrid mode. The agent searches current
+LangChain Markdown documentation, public GitHub issues, release and migration
+pages, and full LangChain Forum topics. The small local corpus remains available
+as a deterministic fallback when a source is unavailable.
 
 ## Setup
 
@@ -41,6 +44,19 @@ cp .env.example .env
 
 Set `MODEL` and the corresponding provider key in `.env`. Without `MODEL`, the
 workflow remains fully runnable using its transparent local synthesizer.
+
+### Live retrieval
+
+`RETRIEVAL_MODE=hybrid` is recommended for local development:
+
+- `hybrid`: use live sources, then fall back to `data/knowledge.json`
+- `live`: use only current public sources
+- `local`: use only the deterministic starter corpus
+
+GitHub public search works without credentials, but `GITHUB_TOKEN` is recommended
+for repeated experiments because unauthenticated search is rate-limited. Docs and
+Forum search require no credentials. Retrieval requests use bounded timeouts and
+short-lived caches so a slow source does not block the entire support answer.
 
 ## Run
 

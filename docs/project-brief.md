@@ -78,7 +78,11 @@ By the end of the project, produce:
 
 ### LangChain Developer Support Agent
 
-The agent receives a developer problem such as:
+The agent supports two related jobs:
+
+1. Explain LangChain, LangGraph, and LangSmith concepts, relationships, and
+   workflows using current sources and practical examples.
+2. Investigate a developer problem such as:
 
 > After upgrading LangGraph, my graph restarts instead of resuming after an
 > interrupt. I am using Python 3.13 and LangGraph 1.x.
@@ -471,26 +475,24 @@ Completed:
 - LangGraph Studio configuration added
 - Anthropic model connection and LangSmith tracing configured
 - Customized Agent Chat UI with conversation history added
+- Live LangChain documentation and release-note retrieval implemented
+- Live GitHub issue and LangChain Forum retrieval implemented
+- Hybrid live/local fallback and retrieval caching implemented
+- Baseline dataset, online evaluators, and comparison experiments implemented
 - Automated tests and linting passing
 
 Not yet completed:
 
-- Live documentation and GitHub search
-- Real resolved-issue dataset
-- Evaluators and experiments
 - Deployment and production-like traffic
-- Opportunity synthesis and prototype
+- A larger dataset grounded in real resolved issues and Forum answers
+- Final opportunity synthesis across the broader LangSmith lifecycle
 
 ## Immediate next steps
 
-1. Use the chat UI to generate realistic complete and incomplete support cases.
-2. Review traces and label concrete failures rather than judging only the final
-   prose.
-3. Convert corrected failures and representative successes into the first
-   LangSmith dataset.
-4. Define initial evaluators for diagnosis, citation support, clarification,
-   and uncertainty.
-5. Run the first experiment as the baseline before changing retrieval.
-6. Add a cached LangChain Forum search node using the public Discourse API.
-7. Replace the remaining local corpus with real public-source tools.
-8. Compare the improved agent against the baseline experiment.
+1. Compare live retrieval against the local baseline experiment.
+2. Review source-level traces for latency, ranking, rate-limit, and fallback
+   failures.
+3. Add representative resolved GitHub and Forum cases to the evaluation dataset.
+4. Tune source ranking and confidence calibration using experiment evidence.
+5. Deploy the agent and generate production-like traffic.
+6. Continue synthesizing evidence-backed LangSmith product opportunities.

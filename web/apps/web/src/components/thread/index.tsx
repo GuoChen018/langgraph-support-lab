@@ -426,8 +426,8 @@ export function Thread() {
                       How can I help?
                     </h1>
                     <p className="mt-3 max-w-lg text-xs uppercase leading-6 tracking-[0.04em] text-muted-foreground">
-                      Describe your LangChain issue. Include package versions
-                      and the exact error when possible.
+                      Learn a LangChain concept or investigate a developer issue.
+                      For troubleshooting, include versions and the exact error.
                     </p>
                   </div>
                 )}
@@ -458,7 +458,7 @@ export function Thread() {
                           form?.requestSubmit();
                         }
                       }}
-                      placeholder="Describe your LangChain or LangGraph issue…"
+                      placeholder="Ask a concept or describe an issue…"
                       className="field-sizing-content min-h-14 resize-none border-none bg-transparent px-3.5 pt-4 text-xs uppercase leading-5 tracking-[0.03em] shadow-none outline-none ring-0 placeholder:text-muted-foreground/70 focus:outline-none focus:ring-0"
                     />
 

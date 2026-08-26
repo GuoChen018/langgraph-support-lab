@@ -14,6 +14,7 @@ class Evidence(TypedDict):
 
 
 class SupportState(MessagesState, total=False):
+    intent: Literal["troubleshooting", "learning", "capabilities"]
     issue: str
     symptoms: list[str]
     versions: list[str]
@@ -22,6 +23,7 @@ class SupportState(MessagesState, total=False):
     documentation_evidence: list[Evidence]
     github_evidence: list[Evidence]
     release_evidence: list[Evidence]
+    forum_evidence: list[Evidence]
     evidence: list[Evidence]
     diagnosis: str
     confidence: Literal["low", "medium", "high"]
