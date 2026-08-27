@@ -1065,6 +1065,7 @@
     .chart-event { position: absolute; top: 0; bottom: auto; left: 50%; z-index: 3; width: 1px; height: 87px; border-left: 1px dashed #667085; pointer-events: none; }
     .chart-event-icon { position: absolute; top: 89px; left: -8px; display: flex; width: 16px; height: 16px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; background: #4499f7; box-shadow: var(--shadow-xs); color: #fff; pointer-events: none; }
     .chart-event-icon .inline-svg { width: 11.08px; height: 11.08px; }
+    .chart-event-icon.settings-marker .inline-svg { transform: translateX(.5px); }
     .chart-event-icon .inline-svg path[fill]:not([fill="none"]) { fill: #fff !important; }
     .chart-event-icon .inline-svg path[stroke]:not([stroke="none"]) { stroke: #fff !important; }
     .chart-event-icon.interactive { pointer-events: auto; cursor: pointer; transition: background-color 120ms ease, box-shadow 120ms ease; }
@@ -1315,6 +1316,12 @@
     .experiment-row:last-child { border-bottom: 0; }
     .experiment-row strong { font-weight: 500; }
     .experiment-row span { color: #47556a; }
+    .experiment-row-group { border-bottom: 1px solid var(--border-subtle); }
+    .experiment-row-group .experiment-row { border-bottom: 0; }
+    .experiment-suggestion { display: flex; min-height: 38px; align-items: center; justify-content: space-between; gap: 16px; margin: 0 16px 12px; padding: 8px 10px; border-radius: 4px; background: #f5faff; color: var(--text-secondary); font-size: 12px; line-height: 1.4; }
+    .experiment-suggestion button { display: inline-flex; flex: none; align-items: center; gap: 4px; padding: 2px 4px; border: 0; border-radius: 3px; background: transparent; color: var(--brand-500); font: 500 12px/1.4 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; cursor: pointer; }
+    .experiment-suggestion button:hover { background: #e8f4ff; }
+    .example-card-action:disabled { cursor: default; opacity: .65; }
     .floating-agent-controls { position: fixed; right: 20px; bottom: 20px; z-index: 80; display: flex; align-items: flex-end; gap: 8px; }
     .controller-toggle { position: static; border-radius: 50%; }
     .controller-toggle .icon { width: 16px; height: 16px; }
@@ -2193,6 +2200,7 @@
     const nextActionStates = new Map();
     const nextActionTimers = new Map();
     const nextActionWidths = new Map();
+    const addedExamplesByScope = new Map();
     let includeBaseline = false;
     let showMetricDefinitions = false;
     let showBaselineComparisons = false;
@@ -2720,7 +2728,7 @@
         const event = eventEntry?.[1];
         if (!event) return "";
         return `<span class="chart-event ${index >= values.length - 2 ? "late" : ""}">
-          <button class="chart-event-icon interactive" aria-label="View ${escapeHtml(event.title)}"><img src="./assets/engine-opportunity-prototype/${event.marker}" alt=""></button>
+          <button class="chart-event-icon interactive ${event.marker === "icon-settings.svg" ? "settings-marker" : ""}" aria-label="View ${escapeHtml(event.title)}"><img src="./assets/engine-opportunity-prototype/${event.marker}" alt=""></button>
           <span class="chart-event-popover">
             <span class="chart-event-popover-head">
               <span class="chart-event-popover-title"><span class="deployment-popover-icon"><img src="./assets/engine-opportunity-prototype/${event.marker}" alt=""></span>${escapeHtml(event.title)}</span>
@@ -3157,60 +3165,63 @@
       const issue = issues[activeIssue];
       const profile = traceProfiles[activeIssue];
       const usesPrompt = ["hallucination", "prompt"].includes(activeIssue);
+      const actionScope = activeSidebarId || activeIssue;
+      const addedExampleIndexes = addedExamplesByScope.get(actionScope) || new Set();
+      const remainingProposedExamples = Math.max(0, traceVariants[activeIssue].length - addedExampleIndexes.size);
       const behaviorByIssue = {
         auth: {
-          key: "silent_account_auth_failure",
+          key: "auth_failure_handled",
           fix: "Refresh expired credentials, retry once, and disclose unrecovered failures.",
-          track: "Detect this authentication-handling pattern in future production traces.",
-          condition: "an account tool returns 401/403 and the agent neither recovers nor clearly discloses the failure",
+          track: "Score whether authentication failures are recovered or clearly disclosed.",
+          condition: "an authentication failure is recovered or clearly disclosed without falsely claiming success",
           dataset: "account-tool-regressions",
           expected: "Recover once, or clearly state that the requested account change was not completed."
         },
         hallucination: {
-          key: "unsupported_policy_claim",
+          key: "policy_claim_grounded",
           fix: "Require policy claims to stay within retrieved evidence and expose contradictions.",
-          track: "Detect unsupported policy claims in future production responses.",
-          condition: "a material claim in the final response contradicts or lacks support in retrieved policy context",
+          track: "Score whether policy claims are grounded in retrieved evidence.",
+          condition: "every material policy claim is supported by the retrieved policy context",
           dataset: "policy-grounding-regressions",
           expected: "Answer only from retrieved policy and state when the available context is insufficient."
         },
         looping: {
-          key: "repeated_tool_trajectory",
+          key: "tool_call_progress",
           fix: "Reuse successful tool results and stop repeated calls with unchanged arguments.",
-          track: "Detect repeated tool trajectories that add no new information.",
-          condition: "the same tool runs more than twice with identical arguments and unchanged state",
+          track: "Score whether the agent advances without unchanged repeated tool calls.",
+          condition: "the agent uses a valid tool result and advances without repeating identical calls",
           dataset: "trajectory-efficiency-regressions",
           expected: "Use the first valid result and continue without repeating an identical call."
         },
         latency: {
-          key: "excessive_synthesis_latency",
+          key: "synthesis_within_budget",
           fix: "Remove duplicated context and reduce the final synthesis critical path.",
-          track: "Detect costly synthesis spans after all required evidence is available.",
-          condition: "final synthesis exceeds the latency threshold while receiving duplicated or unrelated context",
+          track: "Score whether synthesis stays within latency and context budgets.",
+          condition: "final synthesis stays within the configured latency and context budgets",
           dataset: "latency-cost-regressions",
           expected: "Produce the same grounded answer with bounded context, latency, and token use."
         },
         prompt: {
-          key: "missing_version_clarification",
+          key: "environment_context_collected",
           fix: "Restore required environment questions before upgrade troubleshooting.",
-          track: "Detect diagnoses made before required version details are collected.",
-          condition: "the agent proposes an upgrade cause without first collecting package and runtime versions",
+          track: "Score whether required environment details are collected before diagnosis.",
+          condition: "the agent collects the required package and runtime versions before diagnosing",
           dataset: "troubleshooting-prompt-regressions",
           expected: "Ask for LangChain, LangGraph, Python, and observed error details before diagnosing."
         },
         wrongTool: {
-          key: "unconfirmed_destructive_tool",
+          key: "destructive_action_confirmed",
           fix: "Require explicit user confirmation before invoking destructive account tools.",
-          track: "Detect destructive tool calls without explicit user confirmation.",
-          condition: "a destructive tool runs for an informational or exploratory user request",
+          track: "Score whether destructive actions require explicit confirmation.",
+          condition: "a destructive tool runs only after the user explicitly confirms the action",
           dataset: "tool-selection-regressions",
           expected: "Explain options first and invoke the destructive tool only after explicit confirmation."
         },
         guardrail: {
-          key: "authorization_fail_open",
+          key: "authorization_failed_closed",
           fix: "Fail closed whenever an authorization decision is missing or unavailable.",
-          track: "Detect protected actions that follow missing authorization decisions.",
-          condition: "a policy check times out or returns no decision and the workflow still accesses protected data",
+          track: "Score whether missing authorization decisions fail closed.",
+          condition: "a missing authorization decision blocks protected access and is clearly explained",
           dataset: "authorization-regressions",
           expected: "Deny the protected action and explain that authorization could not be verified."
         }
@@ -3261,7 +3272,7 @@
       const nextActionPresentations = {
         fix: { idle: fixPresentation.label, complete: fixCompleteLabel, icon: fixPresentation.icon },
         evaluator: { idle: "Create Evaluator", complete: "View Evaluator", icon: "icon-scales.svg" },
-        example: { idle: "Add 3 Examples", complete: "View Examples", icon: "icon-database.svg" },
+        example: { idle: `Add ${remainingProposedExamples} Example${remainingProposedExamples === 1 ? "" : "s"}`, complete: "View Examples", icon: "icon-database.svg" },
         experiment: {
           idle: "Run Experiment",
           complete: "View Experiment",
@@ -3422,8 +3433,9 @@
         const traceDetail = activeIssue === "auth" ? authTraceDetails[index] : `${trace[1]} · ${trace[0]}`;
         const exampleInput = activeIssue === "auth" ? authExampleInputs[index] : trace[4];
         const wrongOutput = activeIssue === "auth" ? authWrongOutputs[index] : trace[5];
+        const isAdded = addedExampleIndexes.has(index);
         return `<article class="example-card">
-          <header class="example-card-head"><strong>Example ${index + 1}</strong><span class="example-card-actions"><button class="example-card-action">Edit in annotation queue</button><button class="example-card-action bordered"><img src="./assets/engine-opportunity-prototype/icon-database-figma.svg" alt="">Add to dataset</button></span></header>
+          <header class="example-card-head"><strong>Example ${index + 1}</strong><span class="example-card-actions"><button class="example-card-action">Edit in annotation queue</button><button class="example-card-action bordered" data-add-example="${index}" ${isAdded ? "disabled" : ""}><img src="./assets/engine-opportunity-prototype/icon-database-figma.svg" alt="">${isAdded ? "Added to Dataset" : "Add to Dataset"}</button></span></header>
           <div class="example-card-body">
             <div class="example-trace"><span class="example-trace-icon"><img src="./assets/engine-opportunity-prototype/icon-run-root.svg" alt=""></span><strong>${escapeHtml(profile.previewName)}</strong><span>${escapeHtml(traceDetail)}</span></div>
             <div class="example-field"><span class="example-field-label"><span class="example-field-icon"><img src="./assets/engine-opportunity-prototype/icon-user-figma.svg" alt=""></span>Input</span><p>${escapeHtml(exampleInput)}</p></div>
@@ -3453,9 +3465,9 @@
   });
 
   if (!authFailed) return {
-    key: "silent_account_auth_failure",
-    score: 0,
-    comment: "No account-tool authentication failure detected.",
+    key: "auth_failure_handled",
+    score: 1,
+    comment: "No account-tool authentication failure occurred.",
   };
 
   const recovered = runs.some((child) =>
@@ -3468,14 +3480,14 @@
   const claimedSuccess =
     /successfully|has been updated|was updated|completed/
       .test(response);
-  const detected = !recovered && (!disclosed || claimedSuccess);
+  const handled = recovered || (disclosed && !claimedSuccess);
 
   return {
-    key: "silent_account_auth_failure",
-    score: detected ? 1 : 0,
-    comment: detected
-      ? "Authentication failed without recovery or accurate disclosure."
-      : "The agent recovered or accurately disclosed the failure.",
+    key: "auth_failure_handled",
+    score: handled ? 1 : 0,
+    comment: handled
+      ? "The agent recovered or accurately disclosed the failure."
+      : "Authentication failed without recovery or accurate disclosure.",
   };
 }`;
       const evaluatorSourceByIssue = {
@@ -3490,8 +3502,8 @@
   const unsupported = refundWindow === 30 && claims60Days;
 
   return {
-    key: "unsupported_policy_claim",
-    score: unsupported ? 1 : 0,
+    key: "policy_claim_grounded",
+    score: unsupported ? 0 : 1,
     comment: unsupported
       ? "Response contradicts the retrieved 30-day policy."
       : "Material policy claims are supported by retrieved evidence.",
@@ -3508,8 +3520,8 @@
   );
 
   return {
-    key: "repeated_tool_loop",
-    score: repeated ? 1 : 0,
+    key: "tool_call_progress",
+    score: repeated ? 0 : 1,
     comment: repeated
       ? "The same tool ran again with identical arguments."
       : "No unchanged tool-call loop detected.",
@@ -3522,24 +3534,22 @@
   const oversized = promptTokens > 12000;
 
   return {
-    key: "synthesis_latency_regression",
-    score: slow && oversized ? 1 : 0,
+    key: "synthesis_within_budget",
+    score: slow && oversized ? 0 : 1,
     comment: slow && oversized
       ? "Slow response includes an oversized synthesis context."
       : "Trace is within the configured latency and context budget.",
   };
 }`,
         prompt: `function performEval(run) {
-  const metadata = run.extra?.metadata ?? {};
   const messages = run.outputs?.messages ?? [];
   const response = JSON.stringify(messages);
-  const isV43 = metadata.prompt_version === "v43";
   const askedVersions =
     /langchain version|langgraph version|python version/i.test(response);
 
   return {
-    key: "missing_version_clarification",
-    score: isV43 && !askedVersions ? 1 : 0,
+    key: "environment_context_collected",
+    score: askedVersions ? 1 : 0,
     comment: askedVersions
       ? "Required environment questions were asked."
       : "Prompt v43 produced a diagnosis without version details.",
@@ -3554,8 +3564,8 @@
   );
 
   return {
-    key: "destructive_tool_without_confirmation",
-    score: askedQuestion && cancelled ? 1 : 0,
+    key: "destructive_action_confirmed",
+    score: askedQuestion && cancelled ? 0 : 1,
     comment: askedQuestion && cancelled
       ? "Informational intent triggered a destructive tool."
       : "No unconfirmed cancellation detected.",
@@ -3572,8 +3582,8 @@
   );
 
   return {
-    key: "authorization_fail_open",
-    score: noDecision && restrictedDisclosure ? 1 : 0,
+    key: "authorization_failed_closed",
+    score: noDecision && restrictedDisclosure ? 0 : 1,
     comment: noDecision && restrictedDisclosure
       ? "Protected data followed an unavailable access decision."
       : "Authorization failed closed.",
@@ -3582,21 +3592,29 @@
       };
       const evaluatorSource = evaluatorSourceByIssue[activeIssue];
       const experimentByIssue = {
-        auth: { name:"auth-session-recovery-pr-184", candidate:"PR #184 · fix/auth-session-refresh", baseline:"Production v42 · deployed Aug 18 at 3:42 PM", dataset:"account-tool-regressions · 42 examples", evaluators:"silent_account_auth_failure · correctness · latency_budget", runs:42, cost:"$0.55–$0.85" },
-        hallucination: { name:"refund-policy-grounding-prompt-v19", candidate:"Prompt v19 · grounded refund answers", baseline:"Prompt v18 · production", dataset:"billing-policy-regressions · 36 examples", evaluators:"unsupported_policy_claim · correctness · citation_quality", runs:36, cost:"$0.38–$0.62" },
-        looping: { name:"inventory-loop-guard-pr-191", candidate:"PR #191 · stop unchanged tool loops", baseline:"Production v42 · deployed Aug 18", dataset:"inventory-agent-regressions · 28 examples", evaluators:"repeated_tool_loop · answer_correctness · latency_budget", runs:28, cost:"$0.44–$0.76" },
-        latency: { name:"context-dedup-pr-193", candidate:"PR #193 · parallel retrieval + context dedup", baseline:"Production v42 · deployed Aug 18", dataset:"upgrade-support-evals · 50 examples", evaluators:"synthesis_latency_regression · correctness · token_budget", runs:50, cost:"$1.20–$1.90" },
-        prompt: { name:"upgrade-support-prompt-v44", candidate:"Prompt v44 · required environment intake", baseline:"Prompt v43 · production", dataset:"upgrade-troubleshooting · 33 examples", evaluators:"missing_version_clarification · diagnosis_quality · supportive_tone", runs:33, cost:"$0.34–$0.58" },
-        wrongTool: { name:"cancellation-confirmation-pr-196", candidate:"PR #196 · explicit destructive-action gate", baseline:"Production v42 · deployed Aug 18", dataset:"subscription-intent-regressions · 31 examples", evaluators:"destructive_tool_without_confirmation · intent_accuracy · tool_choice", runs:31, cost:"$0.29–$0.51" },
-        guardrail: { name:"authorization-fail-closed-pr-198", candidate:"PR #198 · deny on unavailable policy decision", baseline:"Production v42 · deployed Aug 18", dataset:"policy-enforcement · 24 examples", evaluators:"authorization_fail_open · restricted_disclosure · correctness", runs:24, cost:"$0.31–$0.56" }
+        auth: { name:"auth-session-recovery-pr-184", candidate:"PR #184 · fix/auth-session-refresh", baseline:"Production v42 · deployed Aug 18 at 3:42 PM", dataset:"account-tool-regressions", evaluators:"correctness · latency_budget", proposedEvaluator:"auth_failure_handled", proposedExamples:3, runs:42, cost:"$0.55–$0.85" },
+        hallucination: { name:"refund-policy-grounding-prompt-v19", candidate:"Prompt v19 · grounded refund answers", baseline:"Prompt v18 · production", dataset:"billing-policy-regressions", evaluators:"correctness · citation_quality", proposedEvaluator:"policy_claim_grounded", proposedExamples:3, runs:36, cost:"$0.38–$0.62" },
+        looping: { name:"inventory-loop-guard-pr-191", candidate:"PR #191 · stop unchanged tool loops", baseline:"Production v42 · deployed Aug 18", dataset:"inventory-agent-regressions", evaluators:"answer_correctness · latency_budget", proposedEvaluator:"tool_call_progress", proposedExamples:3, runs:28, cost:"$0.44–$0.76" },
+        latency: { name:"context-dedup-pr-193", candidate:"PR #193 · parallel retrieval + context dedup", baseline:"Production v42 · deployed Aug 18", dataset:"upgrade-support-evals", evaluators:"correctness · token_budget", proposedEvaluator:"synthesis_within_budget", proposedExamples:3, runs:50, cost:"$1.20–$1.90" },
+        prompt: { name:"upgrade-support-prompt-v44", candidate:"Prompt v44 · required environment intake", baseline:"Prompt v43 · production", dataset:"upgrade-troubleshooting", evaluators:"diagnosis_quality · supportive_tone", proposedEvaluator:"environment_context_collected", proposedExamples:3, runs:33, cost:"$0.34–$0.58" },
+        wrongTool: { name:"cancellation-confirmation-pr-196", candidate:"PR #196 · explicit destructive-action gate", baseline:"Production v42 · deployed Aug 18", dataset:"subscription-intent-regressions", evaluators:"intent_accuracy · tool_choice", proposedEvaluator:"destructive_action_confirmed", proposedExamples:3, runs:31, cost:"$0.29–$0.51" },
+        guardrail: { name:"authorization-fail-closed-pr-198", candidate:"PR #198 · deny on unavailable policy decision", baseline:"Production v42 · deployed Aug 18", dataset:"policy-enforcement", evaluators:"restricted_disclosure · correctness", proposedEvaluator:"authorization_failed_closed", proposedExamples:3, runs:24, cost:"$0.31–$0.56" }
       };
       const experiment = experimentByIssue[activeIssue];
-      const experimentRuns = includeBaseline ? experiment.runs * 2 : experiment.runs;
-      const evaluatorResults = experimentRuns * 3;
+      const candidateConfigured = nextActionStates.get(`${actionScope}:fix`) === "complete";
+      const evaluatorCreated = nextActionStates.get(`${actionScope}:evaluator`) === "complete";
+      const configuredExampleCount = experiment.runs + addedExampleIndexes.size;
+      const experimentRuns = includeBaseline ? configuredExampleCount * 2 : configuredExampleCount;
+      const configuredEvaluatorCount = evaluatorCreated ? 3 : 2;
+      const evaluatorResults = experimentRuns * configuredEvaluatorCount;
+      const configuredEvaluators = evaluatorCreated ? `${experiment.proposedEvaluator} (New) · ${experiment.evaluators}` : experiment.evaluators;
+      const experimentSummary = remainingProposedExamples === 0 && evaluatorCreated
+        ? "This experiment includes the reviewed issue-specific examples and evaluator."
+        : "Engine configured this experiment with the existing regression dataset and evaluators. Review the optional issue-specific additions below before including them.";
 
       const panels = {
         fix: fixBySetup[effectiveSetup],
-        evaluator: `<div class="artifact-summary">Runs once per root trace. Scores <span class="mono inline-code">${escapeHtml(behavior.key)} = 1</span> when ${formatParagraphCode(behavior.condition)}. Future matches update this Engine issue; this evaluator does not validate the patch by itself.</div>
+        evaluator: `<div class="artifact-summary">Runs once per root trace. Scores <span class="mono inline-code">${escapeHtml(behavior.key)} = 1</span> when ${formatParagraphCode(behavior.condition)}; <span class="mono inline-code">0</span> identifies the issue behavior.</div>
           <div class="evaluator-block">
             <div class="evaluator-head"><img src="./assets/engine-opportunity-prototype/icon-scales-evaluator.svg" alt=""><span>${escapeHtml(behavior.key)}</span></div>
             <div class="evaluator-filter"><span>Trace Filter</span><code>eq(is_root, true)</code></div>
@@ -3604,7 +3622,7 @@
           </div>`,
         example: `<div class="artifact-summary">Three production-derived cases cover distinct variants of this issue. Review sensitive fields and expected behavior before adding them to <strong>${escapeHtml(behavior.dataset)}</strong>.</div>
           <div class="regression-examples">${exampleCards}</div>`,
-        experiment: `<div class="artifact-summary">Engine proposed this experiment by preselecting the affected examples, existing regression dataset, and issue-specific evaluator.</div>
+        experiment: `<div class="artifact-summary">${experimentSummary}</div>
           <div class="experiment-panel">
             <div class="experiment-head">
               <strong>${includeBaseline ? "Experiment Comparison (2 Experiments)" : "Experiment"}</strong>
@@ -3615,16 +3633,21 @@
             </div>
             <div class="experiment-config">
               <div class="experiment-row"><strong>Name</strong><span>${escapeHtml(includeBaseline ? `${experiment.name}-vs-production` : experiment.name)}</span></div>
-              <div class="experiment-row"><strong>Candidate Version</strong><span>${escapeHtml(experiment.candidate)}</span></div>
+              <div class="experiment-row"><strong>Candidate Version</strong><span>${escapeHtml(candidateConfigured ? experiment.candidate : "Not configured")}</span></div>
               ${includeBaseline ? `<div class="experiment-row"><strong>Baseline Version</strong><span>${escapeHtml(experiment.baseline)}</span></div>` : ""}
-              <div class="experiment-row"><strong>Dataset</strong><span>${escapeHtml(experiment.dataset)}</span></div>
-              <div class="experiment-row"><strong>Evaluators</strong><span>${escapeHtml(experiment.evaluators)}</span></div>
+              <div class="experiment-row-group">
+                <div class="experiment-row"><strong>Dataset</strong><span>${escapeHtml(experiment.dataset)} · ${configuredExampleCount} examples</span></div>
+                ${remainingProposedExamples > 0 ? `<div class="experiment-suggestion"><span>Want broader test coverage?</span><button type="button" data-review-next="example">Review ${remainingProposedExamples} Proposed Example${remainingProposedExamples === 1 ? "" : "s"}</button></div>` : ""}
+              </div>
+              <div class="experiment-row-group">
+                <div class="experiment-row"><strong>Evaluators</strong><span>${escapeHtml(configuredEvaluators)}</span></div>
+                ${evaluatorCreated ? "" : `<div class="experiment-suggestion"><span>Want issue-specific scoring?</span><button type="button" data-review-next="evaluator">Review Proposed Evaluator</button></div>`}
+              </div>
               <div class="experiment-row"><strong>Estimated Run</strong><span>${experimentRuns} agent runs · ${evaluatorResults} evaluator results · est. ${includeBaseline ? `${experiment.cost} × 2` : experiment.cost}</span></div>
             </div>
           </div>`
       };
 
-      const actionScope = activeSidebarId || activeIssue;
       const paintNextActionButton = (button, actionKey, stateKey) => {
         const presentation = nextActionPresentations[actionKey];
         const state = nextActionStates.get(stateKey) || "idle";
@@ -3673,7 +3696,10 @@
             nextActionStates.set(stateKey, "complete");
             nextActionTimers.delete(stateKey);
             if ((activeSidebarId || activeIssue) !== actionScope) return;
-            if (actionKey === "fix") {
+            if (actionKey === "example") {
+              addedExamplesByScope.set(actionScope, new Set(traceVariants[activeIssue].map((_, index) => index)));
+            }
+            if (["fix", "evaluator", "example"].includes(actionKey)) {
               renderNextSteps();
               return;
             }
@@ -3691,6 +3717,24 @@
           renderNextSteps();
         };
       }
+      document.querySelectorAll("[data-review-next]").forEach(button => {
+        button.onclick = () => {
+          activeNext = button.dataset.reviewNext;
+          renderNextSteps();
+        };
+      });
+      document.querySelectorAll("[data-add-example]").forEach(button => {
+        button.onclick = () => {
+          const index = Number(button.dataset.addExample);
+          const added = addedExamplesByScope.get(actionScope) || new Set();
+          added.add(index);
+          addedExamplesByScope.set(actionScope, added);
+          if (added.size >= traceVariants[activeIssue].length) {
+            nextActionStates.set(`${actionScope}:example`, "complete");
+          }
+          renderNextSteps();
+        };
+      });
     }
 
     function bindController() {
