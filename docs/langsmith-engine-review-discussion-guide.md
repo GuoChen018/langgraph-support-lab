@@ -134,9 +134,9 @@ Keep the walkthrough in character as an AI engineer. Do not introduce every feat
 
 ### Setup: the notification
 
-> Imagine I am an AI engineer responsible for a support agent. I get a notification that Engine found a recurring authentication issue across several account tools.
+> Imagine I am an AI engineer responsible for a support agent. I get a notification that Engine found a recurring authentication error silently failing in about 12% of my agent’s tool calls.
 
-> The important signal is not simply that a `401` or `403` occurred. The workflow did not recover or disclose the failure, and some final responses told users their account change succeeded when it had not.
+> That immediately sounds important, but before I act I need to understand what “silently failing” means, how the 12% was calculated, and whether the evidence supports the diagnosis.
 
 Open the authentication issue in the prototype.
 
@@ -146,19 +146,20 @@ Open the authentication issue in the prototype.
 
 Walk through:
 
-- 84 of 700 observed account-tool calls returned `401` or `403`.
+- 84 of 700 agent tool calls returned `401` or `403`.
+- The failures appeared across four account tools.
 - The workflow skipped the required recovery or failure path.
-- 11 final responses falsely implied success.
+- 11 final responses incorrectly claimed the requested account action succeeded.
 
 **Design rationale:**
 
 - Lead with a plain-language causal diagnosis.
 - Include the mechanism and consequence, not merely the error category.
-- Use precise units so “12%” is not mistaken for 12% of all production traffic.
+- Make the denominator explicit: 84 failures among 700 agent tool calls in the analyzed period.
 
 **What to say:**
 
-> This section gives me a falsifiable claim. I know which calls failed, what the workflow did afterward, and why that behavior matters to users.
+> Now I understand the notification. During the analyzed period, 84 of 700 agent tool calls returned `401` or `403`. Those failures appeared across four account tools. The real problem is that the workflow skipped recovery or failure handling, and 11 responses told users their account action succeeded when it had not. This gives me a falsifiable claim: I know which calls failed, what happened afterward, and why it matters.
 
 ### Step 2: Impact
 
@@ -181,7 +182,7 @@ Walk through:
 
 **Important caveat if asked:**
 
-Engine issues accumulate matching evidence over time. These values describe the evidence attached to the issue; they should not silently imply exhaustive analysis of all production traces. Any percentage needs an explicit eligible denominator.
+Engine issues accumulate matching evidence over time. In this scenario, the 12% is explicitly calculated from 84 failures among 700 agent tool calls in the analyzed period. A production version should also disclose that period and its trace coverage so users know exactly what the denominator represents.
 
 **What to say:**
 
@@ -274,13 +275,15 @@ Click **Run Experiment** and let it resolve to **View Experiment**.
 
 **What to say:**
 
-> The workflow ends with evidence that the change worked. The issue becomes a reusable evaluator and dataset coverage, not just a one-time patch.
+> The experiment shows that the candidate now handles the authentication cases correctly: it either succeeds after a bounded refresh and retry, or clearly reports that the action was not completed. The false success evaluator passes, and the existing quality checks show no meaningful regression.
+
+> At this point, I have moved from a new Engine notification to understanding the issue, assessing its impact, verifying the traces, reviewing a fix, creating durable evaluation coverage, and testing the candidate against production-derived examples. This is no longer merely a plausible fix—it is a tested solution. I am comfortable approving and merging the PR.
 
 ### Final walkthrough takeaway
 
 The page follows the engineer’s actual decision sequence:
 
-**Understand → assess → verify → fix → monitor → add coverage → validate**
+**Understand → assess → verify → fix → monitor → add coverage → validate → merge**
 
 ---
 

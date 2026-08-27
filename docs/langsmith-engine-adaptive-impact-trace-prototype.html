@@ -1611,8 +1611,8 @@
         label: "Authentication error",
         severity: "High",
         category: "Silent tool error",
-        title: "Recurring authentication failures are silently ignored across account tools",
-        diagnosis: "Across 84 of 700 production tool calls (12%), four account tools received 401 or 403 responses from the shared account API authentication client. Affected runs skipped the required recovery or failure-handling path, and 11 final responses incorrectly reported that the requested change succeeded.",
+        title: "Agent silently ignores authentication failures in 12% of tool calls",
+        diagnosis: "Across linked traces, 84 of 700 agent tool calls (12%) returned a 401 or 403. The failures appeared across four account tools. The workflow skipped the required recovery or failure-handling path, and 11 final responses incorrectly claimed that the requested account action succeeded.",
         metrics: [
           ["Evidence", "Linked traces", "63", "", "bad"],
           ["Reach", "Unique threads", "51", "", "bad"],
@@ -2193,13 +2193,13 @@
     let activeSeverity = "High";
     let activeStatus = "To Review";
     let activeSidebarId = "sidebar-0";
-    let activeSidebarTitle = "Recurring authentication failures are silently ignored across account tools";
+    let activeSidebarTitle = "Agent silently ignores authentication failures in 12% of tool calls";
     let activeSidebarLabel = "Authentication Error";
     let activeSidebarTraceCount = "63";
     const readSidebarIssues = new Set(["sidebar-0"]);
     const sidebarPriorityOverrides = new Map();
     const sidebarIssueDiagnoses = {
-      "sidebar-0": "Across linked traces, 84 of 700 observed tool calls (12%) returned a 401 or 403 across four account tools. In those runs, the workflow skipped the required recovery or failure-handling path. 11 final responses incorrectly told users that the requested account change succeeded.",
+      "sidebar-0": "Across linked traces, 84 of 700 agent tool calls (12%) returned a 401 or 403. The failures appeared across four account tools. The workflow skipped the required recovery or failure-handling path, and 11 final responses incorrectly claimed that the requested account action succeeded.",
       "sidebar-1": "After a search tool returns a valid result, the agent sometimes repeats the same call with unchanged arguments instead of using the evidence already available. These retries add latency and cost without improving the answer.",
       "sidebar-2": "The assistant introduces policy details that are absent from the retrieved context. Affected responses present unsupported eligibility, timing, or exception rules as if they came from the cited source.",
       "sidebar-3": "All required evidence is available before the final response begins, but response synthesis still adds more than eight seconds because the model receives duplicated context and performs unnecessary additional reasoning.",
@@ -2527,7 +2527,7 @@
 
     function renderSidebar() {
       const sidebarIssues = [
-        ["auth", "Recurring authentication failures are silently ignored across account tools", "Authentication Error", "63", "4h ago", "High"],
+        ["auth", "Agent silently ignores authentication failures in 12% of tool calls", "Authentication Error", "63", "4h ago", "High"],
         ["looping", "Agent retries the same search call after receiving a valid result", "Agent Looping", "154", "5h ago", "High"],
         ["hallucination", "Agent cites policy details that are not present in retrieved context", "Hallucination", "38", "7h ago", "High"],
         ["latency", "Response synthesis adds eight seconds after all evidence is ready", "Latency", "91", "9h ago", "High"],
