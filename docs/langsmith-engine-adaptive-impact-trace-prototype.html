@@ -1032,8 +1032,8 @@
     .metric-context-lines { display: flex; overflow: hidden; width: 100%; flex-direction: column; gap: 2px; }
     .metrics.has-impact-context .metric-detail { display: block; overflow: hidden; width: 100%; color: #787878; font-size: 10px; font-weight: 400; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
     .metrics.has-impact-context .metric-detail.bad, .metrics.has-impact-context .metric-detail.warn, .metrics.has-impact-context .metric-detail.good { color: #787878; }
-    .chart { grid-template-columns: 30px minmax(0,1fr); min-height: 165px; padding: 20px 0; overflow: visible; border-color: var(--border-subtle); }
-    .chart-axis { height: 125px; padding: 0 4px 0 0; justify-content: space-between; font-size: 9px; white-space: nowrap; }
+    .chart { grid-template-columns: 42px minmax(0,1fr); min-height: 165px; padding: 20px 0; overflow: visible; border-color: var(--border-subtle); }
+    .chart-axis { height: 125px; padding: 0 10px 0 0; justify-content: space-between; font-size: 9px; white-space: nowrap; }
     .bars { height: 125px; gap: 4px; margin: 0; overflow: visible; padding: 0 12px 0 0; border: 0; background: none; }
     .bars .bar-slot { height: 85px; box-sizing: border-box; align-self: flex-start; padding: 0 2px; }
     .bar { border-radius: 4px; background: #4499f7; }
@@ -1107,9 +1107,11 @@
     .trace-preview { min-height: 93px; padding: 12px 16px; border: 1px solid var(--border-muted); border-radius: 8px; background: #fff; }
     .trace-preview.active { border-color: var(--border-muted); background: var(--bg-secondary); box-shadow: none; }
     .trace-preview-title { display: flex; height: 20px; align-items: center; gap: 4px; margin-bottom: 11px; font-size: 13px; font-weight: 600; line-height: 16px; }
-    .trace-preview-title .trace-agent-icon { width: 16px; height: 16px; padding: 2px; border-radius: 3px; background: #314a68; }
+    .trace-preview-title .trace-agent-icon { width: 16px; height: 16px; margin-right: 2px; padding: 2px; border-radius: 3px; background: #294f6f; }
+    .trace-preview-title .trace-agent-icon path[fill]:not([fill="none"]) { fill: #00d4f5 !important; }
+    .trace-preview-title .trace-agent-icon path[stroke]:not([stroke="none"]) { stroke: #00d4f5 !important; }
     .trace-preview-name-wrap { position: relative; min-width: 0; flex: 0 1 auto; }
-    .trace-preview-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .trace-preview-name { display: block; overflow: hidden; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
     .trace-preview-name-tooltip { position: absolute; bottom: 22px; left: 0; z-index: 20; visibility: hidden; width: max-content; max-width: 270px; padding: 5px 7px; transform: translateY(2px); border-radius: 4px; opacity: 0; background: #0f172a; box-shadow: var(--shadow-lg); color: #fff; font-size: 11px; font-weight: 400; line-height: 1.35; pointer-events: none; transition: opacity 100ms ease-out, transform 100ms ease-out, visibility 0s linear 100ms; }
     .trace-preview-name-wrap.is-truncated:hover .trace-preview-name-tooltip { visibility: visible; transform: translateY(0); opacity: 1; transition-delay: 0s; }
     .trace-preview:has(.trace-preview-name-wrap:hover) { z-index: 10; }
@@ -1222,16 +1224,26 @@
     .next-action-controls { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; }
     .lc-button { position: relative; display: inline-flex; box-sizing: border-box; flex: none; align-items: center; justify-content: center; gap: 6px; overflow: hidden; padding: 4px 8px; border: 1px solid var(--border-subtle); border-radius: 4px; background: #fff; box-shadow: 0 1px 2px rgba(16,24,40,.05); color: var(--text-secondary); font: 400 13px/1.2 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: -.02em; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; transition: all 200ms ease; }
     .lc-button:hover { background: rgba(250,251,253,.8); }
-    .next-action-cta { width: max-content; margin: 0; }
+    .next-action-cta { width: max-content; height: 26px; margin: 0; font-weight: 500; }
     .next-action-cta img { width: 16px; height: 16px; }
+    .next-action-spinner { display: block; box-sizing: border-box; width: 14px; height: 14px; flex: 0 0 14px; border: 1.5px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: next-action-spin 650ms linear infinite; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; margin: -1px; padding: 0; border: 0; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+    @keyframes next-action-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .next-action-spinner { animation-duration: 1.2s; } }
     .lc-icon-button { display: inline-flex; width: 26px; height: 26px; box-sizing: border-box; flex: 0 0 26px; align-items: center; justify-content: center; padding: 4px; border: 1px solid var(--border-subtle); border-radius: 4px; background: #fff; box-shadow: 0 1px 2px rgba(16,24,40,.05); color: var(--text-secondary); cursor: pointer; transition: all 200ms ease; }
     .lc-icon-button:hover { background: rgba(250,251,253,.8); }
     .next-action-copy { position: static; margin: 0; }
     .next-action-copy img { width: 16px; height: 16px; }
     .next-action[data-next="fix"] .next-action-cta { border-color: var(--brand-500); background: var(--brand-400); color: #fff; }
+    .next-action[data-next="fix"] .next-action-cta .inline-svg { color: #fff; }
+    .next-action[data-next="fix"] .next-action-cta .inline-svg path[stroke]:not([stroke="none"]) { stroke: currentColor !important; }
+    .next-action[data-next="fix"] .next-action-cta .inline-svg path[fill]:not([fill="none"]) { fill: currentColor !important; }
+    .next-action[data-next="fix"] .next-action-cta.action-complete { border-color: var(--brand-500); background: #fff; color: var(--brand-500); }
+    .next-action[data-next="fix"] .next-action-cta.action-complete .inline-svg { color: var(--brand-500); }
     .next-action:hover { background: #f8fafc; }
     .next-action.primary:hover { background: #eef2f7; }
     .next-action[data-next="fix"] .next-action-cta:hover { border-color: transparent; background: #1566b8; }
+    .next-action[data-next="fix"] .next-action-cta.action-complete:hover { border-color: var(--brand-500); background: #f1f7ff; color: var(--brand-500); }
     .next-status { min-height: 220px; padding: 16px; border: 1px solid var(--border-subtle); border-top: 0; border-radius: 0 0 4px 4px; background: #fff; color: var(--text-primary); font-size: 13px; }
     .artifact-summary { margin-bottom: 16px; font-size: 13px; line-height: 1.4; }
     .code-card { overflow: hidden; border: 1px solid var(--border-muted); border-radius: 4px; }
@@ -1549,7 +1561,7 @@
             <div class="next-actions">
               <div class="next-action primary" data-next="fix"><span class="next-action-title" id="fix-action-title">Review Proposed Fix</span><span class="next-action-detail" id="fix-action-detail">Refresh expired credentials, retry once, and disclose unrecovered failures.</span><span class="next-action-controls"><button class="lc-button next-action-cta" id="fix-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="primary"><img src="./assets/engine-opportunity-prototype/icon-pr.svg" alt=""><span id="fix-cta-label">Open PR</span></button><button class="lc-icon-button next-action-copy" type="button" aria-label="Copy proposed fix" data-ds-component="IconButton" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-copy.svg" alt=""></button></span></div>
               <div class="next-action" data-next="evaluator"><span class="next-action-title">Track This Behavior</span><span class="next-action-detail">Detect this authentication-handling pattern in future production traces.</span><span class="next-action-controls"><button class="lc-button next-action-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-scales.svg" alt="">Create Evaluator</button></span></div>
-              <div class="next-action" data-next="example"><span class="next-action-title">Add Examples</span><span class="next-action-detail">Review production-derived cases before adding them to the dataset.</span><span class="next-action-controls"><button class="lc-button next-action-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-database.svg" alt="">Review 3 Examples</button></span></div>
+              <div class="next-action" data-next="example"><span class="next-action-title">Add Examples</span><span class="next-action-detail">Review production-derived cases before adding them to the dataset.</span><span class="next-action-controls"><button class="lc-button next-action-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-database.svg" alt="">Add 3 Examples</button></span></div>
               <div class="next-action" data-next="experiment"><span class="next-action-title">Test Changes</span><span class="next-action-detail">Review a preconfigured experiment before choosing where to execute it.</span><span class="next-action-controls"><button class="lc-button next-action-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-experiment-figma.svg" alt="">Run Experiment</button></span></div>
             </div>
             <div class="next-status" id="next-status"></div>
@@ -2172,6 +2184,9 @@
     let viewMode = "details";
     let activeSetup = "github";
     let activeNext = "fix";
+    const nextActionStates = new Map();
+    const nextActionTimers = new Map();
+    const nextActionWidths = new Map();
     let includeBaseline = false;
     let showMetricDefinitions = false;
     let showBaselineComparisons = false;
@@ -3232,6 +3247,17 @@
       document.querySelector('[data-next="evaluator"] .next-action-detail').textContent = actionCopy.track;
       document.querySelector('[data-next="example"] .next-action-detail').textContent = "Review affected cases before adding them.";
       document.querySelector('[data-next="experiment"] .next-action-detail').textContent = "Review proposed experiment";
+      const fixCompleteLabel = {
+        "Open PR": "View PR",
+        "Apply Changes": "View Changes",
+        "View in Context Hub": "View in Context Hub"
+      }[fixPresentation.label] || "View Fix";
+      const nextActionPresentations = {
+        fix: { idle: fixPresentation.label, complete: fixCompleteLabel, icon: fixPresentation.icon },
+        evaluator: { idle: "Create Evaluator", complete: "View Evaluator", icon: "icon-scales.svg" },
+        example: { idle: "Add 3 Examples", complete: "View Examples", icon: "icon-database.svg" },
+        experiment: { idle: "Run Experiment", complete: "View Experiment", icon: "icon-experiment-figma.svg" }
+      };
 
       const codeFixSource = ` def request(self, method, path, **kwargs):
 -    return self.client.request(method, path, **kwargs)
@@ -3587,11 +3613,55 @@
           </div>`
       };
 
-      document.querySelectorAll("[data-next]").forEach(button => {
-        button.classList.toggle("primary", button.dataset.next === activeNext);
-        button.onclick = () => {
-          activeNext = button.dataset.next;
+      const actionScope = activeSidebarId || activeIssue;
+      const paintNextActionButton = (button, actionKey, stateKey) => {
+        const presentation = nextActionPresentations[actionKey];
+        const state = nextActionStates.get(stateKey) || "idle";
+        button.classList.toggle("action-complete", state === "complete");
+        button.disabled = state === "loading";
+        button.setAttribute("aria-busy", state === "loading" ? "true" : "false");
+        if (state === "loading") {
+          const loadingWidth = nextActionWidths.get(stateKey);
+          if (loadingWidth) button.style.width = `${loadingWidth}px`;
+          button.innerHTML = '<span class="next-action-spinner" aria-hidden="true"></span><span class="sr-only">Loading</span>';
+          return;
+        }
+        button.style.removeProperty("width");
+        const label = state === "complete" ? presentation.complete : presentation.idle;
+        button.innerHTML = `<img src="./assets/engine-opportunity-prototype/${presentation.icon}" alt=""><span>${escapeHtml(label)}</span>`;
+        hydrateSvgIcons(button);
+      };
+
+      document.querySelectorAll("[data-next]").forEach(card => {
+        const actionKey = card.dataset.next;
+        const stateKey = `${actionScope}:${actionKey}`;
+        const cta = card.querySelector(".next-action-cta");
+        card.classList.toggle("primary", actionKey === activeNext);
+        card.onclick = () => {
+          activeNext = actionKey;
           renderNextSteps();
+        };
+        paintNextActionButton(cta, actionKey, stateKey);
+        cta.onclick = event => {
+          event.stopPropagation();
+          const state = nextActionStates.get(stateKey) || "idle";
+          if (state === "loading") return;
+          if (state === "complete") {
+            activeNext = actionKey;
+            renderNextSteps();
+            return;
+          }
+          nextActionWidths.set(stateKey, Math.ceil(cta.getBoundingClientRect().width));
+          nextActionStates.set(stateKey, "loading");
+          paintNextActionButton(cta, actionKey, stateKey);
+          clearTimeout(nextActionTimers.get(stateKey));
+          nextActionTimers.set(stateKey, setTimeout(() => {
+            nextActionStates.set(stateKey, "complete");
+            nextActionTimers.delete(stateKey);
+            if ((activeSidebarId || activeIssue) !== actionScope) return;
+            const currentButton = document.querySelector(`[data-next="${actionKey}"] .next-action-cta`);
+            if (currentButton) paintNextActionButton(currentButton, actionKey, stateKey);
+          }, 900));
         };
       });
       document.getElementById("next-status").innerHTML = panels[activeNext];
