@@ -1215,10 +1215,12 @@
     .next-steps-head { margin-bottom: 12px; padding: 0; border: 0; }
     .next-steps-head h2, .section-heading h2, .content-section h2, .representative-head strong { font-weight: 500 !important; }
     .next-steps-head span { display: none; }
-    .next-actions { overflow: hidden; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--border-subtle); border-radius: 4px 4px 0 0; }
+    .next-actions { overflow: visible; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--border-subtle); border-radius: 4px 4px 0 0; }
     .next-action { display: flex; min-height: 127px; flex-direction: column; padding: 16px; border-right: 1px solid var(--border-subtle); background: #fff; }
+    .next-action:first-child { border-radius: 3px 0 0; }
+    .next-action:last-child { border-radius: 0 3px 0 0; }
     .next-action[data-next="fix"] { position: relative; }
-    .next-action.primary { position: relative; z-index: 1; background: #f7f8fc; box-shadow: none; }
+    .next-action.primary { position: relative; z-index: 1; background: #fafbfc; box-shadow: none; }
     .next-action-title { margin-bottom: 8px; font-size: 14px; font-weight: 500; line-height: 1.5; }
     .next-action-detail { color: var(--text-quaternary); font-size: 13px; line-height: 1.4; }
     .next-action-controls { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; }
@@ -1226,6 +1228,10 @@
     .lc-button:hover { background: rgba(250,251,253,.8); }
     .next-action-cta { width: max-content; height: 26px; margin: 0; font-weight: 500; }
     .next-action-cta img { width: 16px; height: 16px; }
+    .next-action-cta-wrap { position: relative; display: inline-flex; width: max-content; }
+    .next-action-cta:disabled { opacity: .55; cursor: not-allowed; }
+    .next-action-disabled-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; z-index: 30; visibility: hidden; width: 208px; padding: 6px 8px; transform: translate(-50%, 2px); border-radius: 4px; opacity: 0; background: #0f172a; box-shadow: var(--shadow-lg); color: #fff; font-size: 11px; font-weight: 400; line-height: 1.4; pointer-events: none; transition: opacity 100ms ease-out, transform 100ms ease-out, visibility 0s linear 100ms; }
+    .next-action-cta-wrap.is-disabled:hover .next-action-disabled-tooltip, .next-action-cta-wrap.is-disabled:focus-within .next-action-disabled-tooltip { visibility: visible; transform: translate(-50%, 0); opacity: 1; transition-delay: 0s; }
     .next-action-spinner { display: block; box-sizing: border-box; width: 14px; height: 14px; flex: 0 0 14px; border: 1.5px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: next-action-spin 650ms linear infinite; }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; margin: -1px; padding: 0; border: 0; clip: rect(0, 0, 0, 0); white-space: nowrap; }
     @keyframes next-action-spin { to { transform: rotate(360deg); } }
@@ -1240,8 +1246,8 @@
     .next-action[data-next="fix"] .next-action-cta .inline-svg path[fill]:not([fill="none"]) { fill: currentColor !important; }
     .next-action[data-next="fix"] .next-action-cta.action-complete { border-color: var(--brand-500); background: #fff; color: var(--brand-500); }
     .next-action[data-next="fix"] .next-action-cta.action-complete .inline-svg { color: var(--brand-500); }
-    .next-action:hover { background: #f8fafc; }
-    .next-action.primary:hover { background: #eef2f7; }
+    .next-action:hover { background: #fbfcfd; }
+    .next-action.primary:hover { background: #f7f9fb; }
     .next-action[data-next="fix"] .next-action-cta:hover { border-color: transparent; background: #1566b8; }
     .next-action[data-next="fix"] .next-action-cta.action-complete:hover { border-color: var(--brand-500); background: #f1f7ff; color: var(--brand-500); }
     .next-status { min-height: 220px; padding: 16px; border: 1px solid var(--border-subtle); border-top: 0; border-radius: 0 0 4px 4px; background: #fff; color: var(--text-primary); font-size: 13px; }
@@ -1562,7 +1568,7 @@
               <div class="next-action primary" data-next="fix"><span class="next-action-title" id="fix-action-title">Review Proposed Fix</span><span class="next-action-detail" id="fix-action-detail">Refresh expired credentials, retry once, and disclose unrecovered failures.</span><span class="next-action-controls"><button class="lc-button next-action-cta" id="fix-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="primary"><img src="./assets/engine-opportunity-prototype/icon-pr.svg" alt=""><span id="fix-cta-label">Open PR</span></button><button class="lc-icon-button next-action-copy" type="button" aria-label="Copy proposed fix" data-ds-component="IconButton" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-copy.svg" alt=""></button></span></div>
               <div class="next-action" data-next="evaluator"><span class="next-action-title">Track This Behavior</span><span class="next-action-detail">Detect this authentication-handling pattern in future production traces.</span><span class="next-action-controls"><button class="lc-button next-action-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-scales.svg" alt="">Create Evaluator</button></span></div>
               <div class="next-action" data-next="example"><span class="next-action-title">Add Examples</span><span class="next-action-detail">Review production-derived cases before adding them to the dataset.</span><span class="next-action-controls"><button class="lc-button next-action-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-database.svg" alt="">Add 3 Examples</button></span></div>
-              <div class="next-action" data-next="experiment"><span class="next-action-title">Test Changes</span><span class="next-action-detail">Review a preconfigured experiment before choosing where to execute it.</span><span class="next-action-controls"><button class="lc-button next-action-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-experiment-figma.svg" alt="">Run Experiment</button></span></div>
+              <div class="next-action" data-next="experiment"><span class="next-action-title">Test Changes</span><span class="next-action-detail">Review a preconfigured experiment before choosing where to execute it.</span><span class="next-action-controls"><span class="next-action-cta-wrap"><button class="lc-button next-action-cta" type="button" disabled aria-describedby="experiment-disabled-tooltip" data-ds-component="Button" data-ds-size="small" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-experiment-figma.svg" alt="">Run Experiment</button><span class="next-action-disabled-tooltip" id="experiment-disabled-tooltip" role="tooltip">Open PR and checkout PR branch locally first to run experiment</span></span></span></div>
             </div>
             <div class="next-status" id="next-status"></div>
           </section>
@@ -1612,7 +1618,7 @@
         severity: "High",
         category: "Silent tool error",
         title: "Agent silently ignores authentication failures in 12% of tool calls",
-        diagnosis: "Across linked traces, 84 of 700 agent tool calls (12%) returned a 401 or 403. The failures appeared across four account tools. The workflow skipped the required recovery or failure-handling path, and 11 final responses incorrectly claimed that the requested account action succeeded.",
+        diagnosis: "Across linked traces, 84 of 700 agent tool calls (12%) returned a 401 or 403. The failures appeared across four account tools: update_billing_address, update_account_email, replace_payment_method, and update_subscription_plan. The workflow skipped the required recovery or failure-handling path, and 11 final responses incorrectly claimed that the requested account action succeeded.",
         metrics: [
           ["Evidence", "Linked traces", "63", "", "bad"],
           ["Reach", "Unique threads", "51", "", "bad"],
@@ -2199,7 +2205,7 @@
     const readSidebarIssues = new Set(["sidebar-0"]);
     const sidebarPriorityOverrides = new Map();
     const sidebarIssueDiagnoses = {
-      "sidebar-0": "Across linked traces, 84 of 700 agent tool calls (12%) returned a 401 or 403. The failures appeared across four account tools. The workflow skipped the required recovery or failure-handling path, and 11 final responses incorrectly claimed that the requested account action succeeded.",
+      "sidebar-0": "Across linked traces, 84 of 700 agent tool calls (12%) returned a 401 or 403. The failures appeared across four account tools: update_billing_address, update_account_email, replace_payment_method, and update_subscription_plan. The workflow skipped the required recovery or failure-handling path, and 11 final responses incorrectly claimed that the requested account action succeeded.",
       "sidebar-1": "After a search tool returns a valid result, the agent sometimes repeats the same call with unchanged arguments instead of using the evidence already available. These retries add latency and cost without improving the answer.",
       "sidebar-2": "The assistant introduces policy details that are absent from the retrieved context. Affected responses present unsupported eligibility, timing, or exception rules as if they came from the cited source.",
       "sidebar-3": "All required evidence is available before the final response begins, but response synthesis still adds more than eight seconds because the model receives duplicated context and performs unnecessary additional reasoning.",
@@ -3256,7 +3262,12 @@
         fix: { idle: fixPresentation.label, complete: fixCompleteLabel, icon: fixPresentation.icon },
         evaluator: { idle: "Create Evaluator", complete: "View Evaluator", icon: "icon-scales.svg" },
         example: { idle: "Add 3 Examples", complete: "View Examples", icon: "icon-database.svg" },
-        experiment: { idle: "Run Experiment", complete: "View Experiment", icon: "icon-experiment-figma.svg" }
+        experiment: {
+          idle: "Run Experiment",
+          complete: "View Experiment",
+          icon: "icon-experiment-figma.svg",
+          unavailable: nextActionStates.get(`${activeSidebarId || activeIssue}:fix`) !== "complete"
+        }
       };
 
       const codeFixSource = ` def request(self, method, path, **kwargs):
@@ -3617,8 +3628,10 @@
       const paintNextActionButton = (button, actionKey, stateKey) => {
         const presentation = nextActionPresentations[actionKey];
         const state = nextActionStates.get(stateKey) || "idle";
+        button.closest(".next-action-cta-wrap")?.classList.toggle("is-disabled", Boolean(presentation.unavailable));
         button.classList.toggle("action-complete", state === "complete");
-        button.disabled = state === "loading";
+        button.disabled = presentation.unavailable || state === "loading";
+        button.setAttribute("aria-disabled", button.disabled ? "true" : "false");
         button.setAttribute("aria-busy", state === "loading" ? "true" : "false");
         if (state === "loading") {
           const loadingWidth = nextActionWidths.get(stateKey);
@@ -3644,6 +3657,7 @@
         paintNextActionButton(cta, actionKey, stateKey);
         cta.onclick = event => {
           event.stopPropagation();
+          if (nextActionPresentations[actionKey].unavailable) return;
           const state = nextActionStates.get(stateKey) || "idle";
           if (state === "loading") return;
           if (state === "complete") {
@@ -3659,6 +3673,10 @@
             nextActionStates.set(stateKey, "complete");
             nextActionTimers.delete(stateKey);
             if ((activeSidebarId || activeIssue) !== actionScope) return;
+            if (actionKey === "fix") {
+              renderNextSteps();
+              return;
+            }
             const currentButton = document.querySelector(`[data-next="${actionKey}"] .next-action-cta`);
             if (currentButton) paintNextActionButton(currentButton, actionKey, stateKey);
           }, 900));

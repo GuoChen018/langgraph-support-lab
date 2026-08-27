@@ -147,7 +147,7 @@ Open the authentication issue in the prototype.
 Walk through:
 
 - 84 of 700 agent tool calls returned `401` or `403`.
-- The failures appeared across four account tools.
+- The failures appeared across four account tools: `update_billing_address`, `update_account_email`, `replace_payment_method`, and `update_subscription_plan`.
 - The workflow skipped the required recovery or failure path.
 - 11 final responses incorrectly claimed the requested account action succeeded.
 
@@ -159,7 +159,7 @@ Walk through:
 
 **What to say:**
 
-> Now I understand the notification. During the analyzed period, 84 of 700 agent tool calls returned `401` or `403`. Those failures appeared across four account tools. The real problem is that the workflow skipped recovery or failure handling, and 11 responses told users their account action succeeded when it had not. This gives me a falsifiable claim: I know which calls failed, what happened afterward, and why it matters.
+> Now I understand the notification. During the analyzed period, 84 of 700 agent tool calls returned `401` or `403`. Those failures appeared across four account tools: `update_billing_address`, `update_account_email`, `replace_payment_method`, and `update_subscription_plan`. The real problem is that the workflow skipped recovery or failure handling, and 11 responses told users their account action succeeded when it had not. This gives me a falsifiable claim: I know which calls failed, what happened afterward, and why it matters.
 
 ### Step 2: Impact
 
