@@ -277,6 +277,9 @@
       white-space: nowrap;
     }
     .bar-slot:has(> .bar:hover) > .bar-tooltip { visibility: visible; }
+    .bar-x-label { position: absolute; top: calc(100% + 28px); left: 50%; transform: translateX(-50%); color: var(--text-tertiary); font-size: 9px; line-height: 11px; white-space: nowrap; }
+    .bar-slot:first-child .bar-x-label { left: 0; transform: none; }
+    .bar-slot:last-child .bar-x-label { right: 0; left: auto; transform: none; }
     .chart-labels { display: flex; justify-content: space-between; margin-top: 5px; color: var(--quiet); font-size: 9px; }
     .impact-breakdown {
       display: flex;
@@ -940,7 +943,7 @@
     .breadcrumb-project-icon { width: 12px; height: 12px; margin-right: 6px; color: var(--text-primary); }
     .breadcrumb-current { color: var(--text-primary); }
     .project-row { display: flex; height: 24px; align-items: center; justify-content: space-between; padding: 0 16px; }
-    .project-name { display: flex; height: 24px; align-items: center; gap: 6px; color: var(--text-primary); font-size: 16px; font-weight: 600; letter-spacing: -.04em; }
+    .project-name { display: flex; height: 24px; align-items: center; gap: 6px; color: var(--text-primary); font-size: 16px; font-weight: 500; letter-spacing: -.04em; }
     .project-name > .inline-svg { width: 16px; height: 16px; }
     .id-chip { display: inline-flex; height: 24px; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; background: #f6f8fb; color: #64758b; font: 12px/1.5 var(--mono); }
     .id-chip .inline-svg { width: 14px; height: 14px; }
@@ -1016,23 +1019,26 @@
     .impact-card { container-type: inline-size; border-color: var(--border-subtle); border-radius: 4px; }
     .impact-groups, .impact-breakdown, .chart-title, .chart-labels { display: none !important; }
     .metrics { height: 76px; overflow: hidden; grid-template-columns: repeat(4, 1fr); border-radius: 3px 3px 0 0; }
-    .metric { min-height: 76px; padding: 16px; border-right-color: var(--border-subtle); }
+    .metrics .metric { min-height: 76px; padding: 16px; border-right-color: var(--border-subtle); border-bottom: 0; }
     .metric.selected { background: #f7f8fc; box-shadow: none; }
     .metric-label { color: #787878; font-size: 12px; font-weight: 400; }
     .metric:hover { background: #f7f8fc; }
-    .metric-main { margin-top: 8px; } .metric-value { color: #18181a; font-size: 18px; line-height: 1.2; } .metric-detail { display: none; }
-    .metrics.show-comparison-context { height: 94px; }
-    .metrics.show-comparison-context .metric { min-height: 94px; }
-    .metrics.show-comparison-context .metric-main { flex-direction: column; align-items: flex-start; gap: 6px; }
-    .metrics.show-comparison-context .metric-detail { display: block; overflow: hidden; width: 100%; color: #787878; font-size: 11px; font-weight: 400; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
-    .metrics.show-comparison-context .metric-detail.bad, .metrics.show-comparison-context .metric-detail.warn, .metrics.show-comparison-context .metric-detail.good { color: #787878; }
-    .chart { grid-template-columns: 19px minmax(0,1fr); min-height: 165px; padding: 20px; overflow: visible; border-color: var(--border-subtle); }
-    .chart-axis { height: 125px; padding: 0 8px 0 0; justify-content: space-between; font-size: 10px; }
-    .bars { height: 125px; gap: 4px; margin: 0; overflow: visible; padding: 0 13px; border: 0; background: none; }
+    .metric-main { margin-top: 8px; } .metric-value { color: #18181a; font-size: 18px; font-weight: 600; line-height: 1.2; white-space: nowrap; } .metric-detail { display: none; }
+    .metrics.has-impact-context { height: 94px; }
+    .metrics.has-impact-context .metric { min-height: 94px; }
+    .metrics.has-impact-context .metric-main { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .metrics.has-two-context-lines { height: 112px; }
+    .metrics.has-two-context-lines .metric { min-height: 112px; }
+    .metric-context-lines { display: flex; overflow: hidden; width: 100%; flex-direction: column; gap: 2px; }
+    .metrics.has-impact-context .metric-detail { display: block; overflow: hidden; width: 100%; color: #787878; font-size: 10px; font-weight: 400; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+    .metrics.has-impact-context .metric-detail.bad, .metrics.has-impact-context .metric-detail.warn, .metrics.has-impact-context .metric-detail.good { color: #787878; }
+    .chart { grid-template-columns: 30px minmax(0,1fr); min-height: 165px; padding: 20px 0; overflow: visible; border-color: var(--border-subtle); }
+    .chart-axis { height: 125px; padding: 0 4px 0 0; justify-content: space-between; font-size: 9px; white-space: nowrap; }
+    .bars { height: 125px; gap: 4px; margin: 0; overflow: visible; padding: 0 12px 0 0; border: 0; background: none; }
     .bars .bar-slot { height: 85px; box-sizing: border-box; align-self: flex-start; padding: 0 2px; }
     .bar { border-radius: 4px; background: #4499f7; }
     .bars.line-chart { position: relative; display: block; padding: 0; }
-    .line-plot { position: absolute; inset: 0 13px 28px; }
+    .line-plot { position: absolute; inset: 0 12px 28px 0; }
     .line-chart-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
     .line-chart-path { fill: none; stroke: #4499f7; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; vector-effect: non-scaling-stroke; }
     .line-point-slot { position: absolute; top: 0; bottom: 0; width: 1px; }
@@ -1051,11 +1057,11 @@
     .line-point:hover { z-index: 25; }
     .line-point:hover::before, .line-point:hover::after { opacity: 1; }
     .line-point:hover .line-point-tooltip { display: block; }
-    .line-x-label { position: absolute; top: calc(100% + 17px); left: 0; transform: translateX(-50%); color: var(--text-tertiary); font-size: 9px; line-height: 11px; white-space: nowrap; }
+    .line-x-label { position: absolute; top: calc(100% + 28px); left: 0; transform: translateX(-50%); color: var(--text-tertiary); font-size: 9px; line-height: 11px; white-space: nowrap; }
     .line-x-label.first { transform: none; }
     .line-x-label.last { transform: translateX(-100%); }
     .line-point-slot .chart-event { left: 0; z-index: 6; }
-    .bar-tooltip { bottom: calc(var(--bar-height) + 4px); min-width: 32px; width: 32px; padding: 4px; font-size: 11px; line-height: 14px; }
+    .bar-tooltip { bottom: calc(var(--bar-height) + 4px); width: max-content; min-width: 32px; padding: 4px 6px; font-size: 11px; line-height: 14px; }
     .chart-event { position: absolute; top: 0; bottom: auto; left: 50%; z-index: 3; width: 1px; height: 87px; border-left: 1px dashed #667085; pointer-events: none; }
     .chart-event-icon { position: absolute; top: 89px; left: -8px; display: flex; width: 16px; height: 16px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; background: #4499f7; box-shadow: var(--shadow-xs); color: #fff; pointer-events: none; }
     .chart-event-icon .inline-svg { width: 11.08px; height: 11.08px; }
@@ -1092,6 +1098,7 @@
     .bar-slot:nth-child(17)::after { content: "Tue Jun 23"; } .bar-slot:nth-child(19)::after { content: "Thu Jun 25"; }
     .bar-slot:nth-child(21)::after { content: "Sat Jun 27"; } .bar-slot:nth-child(23)::after { content: "Mon Jun 29"; }
     .bar-slot:nth-child(25)::after { content: "Wed Jul 1"; }
+    .bar-slot::after { content: none !important; }
     .evidence-workspace { display: grid; grid-template-columns: 318px minmax(0, 1fr); gap: 8px; height: 403px; min-height: 403px; overflow: hidden; }
     .representative-traces { overflow: visible; border: 0; background: #fff; }
     .representative-head { display: flex; min-height: 0; padding: 0 0 12px; border: 0; }
@@ -1295,13 +1302,26 @@
     .controller-toggle .icon { width: 16px; height: 16px; }
     .agent-launcher { display: grid; width: 52px; height: 52px; place-items: center; padding: 0; border: 1px solid #45b8ff; border-radius: 50%; background: #10233f; box-shadow: 0 4px 12px rgba(15,23,42,.18); cursor: pointer; }
     .agent-launcher img, .agent-launcher .inline-svg { width: 30px; height: 30px; }
-    .controller { position: fixed; right: 80px; bottom: 56px; z-index: 79; width: 252px; padding: 16px; border: 1px solid var(--border-subtle); border-radius: 8px; background: #fff; box-shadow: var(--shadow-lg); }
+    .controller { position: fixed; right: 80px; bottom: 56px; z-index: 79; display: flex; width: 268px; flex-direction: column; gap: 24px; padding: 20px; border: 1px solid var(--border-subtle); border-radius: 8px; background: #fff; box-shadow: var(--shadow-lg); }
     .controller.hidden { display: none; }
-    .controller-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .controller-head strong { font-size: 14px; font-weight: 500; } .controller-group { margin-top: 12px; }
-    .controller-label { display: block; margin-bottom: 6px; color: var(--text-tertiary); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-    .controller select { width: 100%; height: 26px; appearance: none; padding: 4px 32px 4px 8px; border: 1px solid var(--border-subtle); border-radius: 4px; background-color: #fff; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%23334155' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-position: right 8px center; background-repeat: no-repeat; background-size: 16px 16px; box-shadow: 0 1px 2px rgba(16,24,40,.05); color: var(--text-secondary); font-size: 13px; font-weight: 400; line-height: 1.2; }
+    .controller-head { display: flex; align-items: center; justify-content: space-between; }
+    .controller-head strong { font-size: 14px; font-weight: 500; }
+    #controller-close { border: 0; background: transparent; box-shadow: none; }
+    #controller-close:hover { background: #f5f5f5; }
+    .controller-label { display: block; margin-bottom: 8px; color: var(--text-tertiary); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    .controller-dropdown { position: relative; width: 100%; }
+    .controller-dropdown-trigger { display: flex; width: 100%; min-height: 34px; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 8px; border: 1px solid var(--border-subtle); border-radius: 4px; background: #fff; box-shadow: var(--shadow-xs); color: var(--text-secondary); font-size: 13px; font-weight: 400; text-align: left; cursor: pointer; }
+    .controller-dropdown-trigger:hover, .controller-dropdown.open .controller-dropdown-trigger { background: #fafafa; }
+    .controller-dropdown-trigger img, .controller-dropdown-trigger .inline-svg { width: 16px; height: 16px; transition: transform 120ms ease; }
+    .controller-dropdown.open .controller-dropdown-trigger img, .controller-dropdown.open .controller-dropdown-trigger .inline-svg { transform: rotate(180deg); }
+    .controller-dropdown-menu { position: absolute; top: calc(100% + 6px); right: 0; left: 0; z-index: 2; display: none; flex-direction: column; gap: 2px; padding: 4px; border: .5px solid rgba(13,13,13,.15); border-radius: 8px; background: #fff; box-shadow: 0 6px 16px rgba(16,24,40,.12); }
+    .controller-dropdown.open .controller-dropdown-menu { display: flex; }
+    .controller-dropdown-option { display: flex; width: 100%; min-height: 30px; align-items: center; gap: 8px; padding: 6px 8px; border: 0; border-radius: 4px; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 400; text-align: left; cursor: pointer; }
+    .controller-dropdown-option:hover, .controller-dropdown-option.selected { background: #f5f5f5; }
+    .controller-dropdown-option img, .controller-dropdown-option .inline-svg { width: 14px; height: 14px; margin-left: auto; visibility: hidden; }
+    .controller-dropdown-option.selected img, .controller-dropdown-option.selected .inline-svg { visibility: visible; }
     .controller-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
+    .controller-switch-row + .controller-switch-row { margin-top: 14px; }
     .controller-switch-copy { display: flex; min-width: 0; flex-direction: column; gap: 2px; color: var(--text-secondary); font-size: 13px; }
     .controller-switch-copy small { color: var(--text-quaternary); font-size: 11px; line-height: 1.3; }
     .controller-switch-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); opacity: 0; white-space: nowrap; }
@@ -1529,7 +1549,7 @@
             <div class="next-actions">
               <div class="next-action primary" data-next="fix"><span class="next-action-title" id="fix-action-title">Review Proposed Fix</span><span class="next-action-detail" id="fix-action-detail">Refresh expired credentials, retry once, and disclose unrecovered failures.</span><span class="next-action-controls"><button class="lc-button next-action-cta" id="fix-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="primary"><img src="./assets/engine-opportunity-prototype/icon-pr.svg" alt=""><span id="fix-cta-label">Open PR</span></button><button class="lc-icon-button next-action-copy" type="button" aria-label="Copy proposed fix" data-ds-component="IconButton" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-copy.svg" alt=""></button></span></div>
               <div class="next-action" data-next="evaluator"><span class="next-action-title">Track This Behavior</span><span class="next-action-detail">Detect this authentication-handling pattern in future production traces.</span><span class="next-action-controls"><button class="lc-button next-action-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-scales.svg" alt="">Create Evaluator</button></span></div>
-              <div class="next-action" data-next="example"><span class="next-action-title">Add Regression Examples</span><span class="next-action-detail">Review production-derived cases before adding them to the dataset.</span><span class="next-action-controls"><button class="lc-button next-action-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-database.svg" alt="">Review 3 Examples</button></span></div>
+              <div class="next-action" data-next="example"><span class="next-action-title">Add Examples</span><span class="next-action-detail">Review production-derived cases before adding them to the dataset.</span><span class="next-action-controls"><button class="lc-button next-action-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-database.svg" alt="">Review 3 Examples</button></span></div>
               <div class="next-action" data-next="experiment"><span class="next-action-title">Test Changes</span><span class="next-action-detail">Review a preconfigured experiment before choosing where to execute it.</span><span class="next-action-controls"><button class="lc-button next-action-cta" type="button" data-ds-component="Button" data-ds-size="small" data-ds-variant="secondary"><img src="./assets/engine-opportunity-prototype/icon-experiment-figma.svg" alt="">Run Experiment</button></span></div>
             </div>
             <div class="next-status" id="next-status"></div>
@@ -1546,17 +1566,28 @@
   <aside class="controller hidden" id="controller">
     <div class="controller-head"><strong>Prototype settings</strong><button class="lc-icon-button" id="controller-close" type="button" aria-label="Close prototype settings"><img class="icon" src="./assets/engine-opportunity-prototype/icon-x-figma.svg" alt=""></button></div>
     <div class="controller-group">
-      <label class="controller-label" for="setup-select">Customer setup</label>
-      <select id="setup-select">
-        <option value="github">GitHub connected</option><option value="pr">PR already open</option>
-        <option value="no-github">No GitHub integration</option><option value="agents">Context Hub · AGENTS.md</option><option value="skills">Context Hub · Skill</option>
-      </select>
+      <span class="controller-label">Customer setup</span>
+      <div class="controller-dropdown" id="setup-dropdown">
+        <button class="controller-dropdown-trigger" id="setup-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"><span id="setup-value">GitHub connected</span><img src="./assets/engine-opportunity-prototype/icon-chevron.svg" alt=""></button>
+        <div class="controller-dropdown-menu" role="listbox">
+          <button class="controller-dropdown-option" type="button" data-setup="github" role="option">GitHub connected<img src="./assets/engine-opportunity-prototype/icon-dropdown-check.svg" alt=""></button>
+          <button class="controller-dropdown-option" type="button" data-setup="pr" role="option">PR already open<img src="./assets/engine-opportunity-prototype/icon-dropdown-check.svg" alt=""></button>
+          <button class="controller-dropdown-option" type="button" data-setup="no-github" role="option">No GitHub integration<img src="./assets/engine-opportunity-prototype/icon-dropdown-check.svg" alt=""></button>
+          <button class="controller-dropdown-option" type="button" data-setup="agents" role="option">Context Hub · AGENTS.md<img src="./assets/engine-opportunity-prototype/icon-dropdown-check.svg" alt=""></button>
+          <button class="controller-dropdown-option" type="button" data-setup="skills" role="option">Context Hub · Skill<img src="./assets/engine-opportunity-prototype/icon-dropdown-check.svg" alt=""></button>
+        </div>
+      </div>
     </div>
     <div class="controller-group">
       <span class="controller-label">Impact</span>
+      <label class="controller-switch-row" for="impact-context-toggle">
+        <span class="controller-switch-copy">Metric definitions<small>Explain what each value represents.</small></span>
+        <input class="controller-switch-input" id="impact-context-toggle" type="checkbox">
+        <span class="controller-switch-track" aria-hidden="true"></span>
+      </label>
       <label class="controller-switch-row" for="impact-comparison-toggle">
-        <span class="controller-switch-copy">Comparison context<small>Show rates, baselines, and change.</small></span>
-        <input class="controller-switch-input" id="impact-comparison-toggle" type="checkbox" checked>
+        <span class="controller-switch-copy">Baseline comparison<small>Comparable traces where defensible.</small></span>
+        <input class="controller-switch-input" id="impact-comparison-toggle" type="checkbox">
         <span class="controller-switch-track" aria-hidden="true"></span>
       </label>
     </div>
@@ -1571,12 +1602,11 @@
         title: "Recurring authentication failures are silently ignored across account tools",
         diagnosis: "Across 84 of 700 production tool calls (12%), four account tools received 401 or 403 responses from the shared account API authentication client. Affected runs skipped the required recovery or failure-handling path, and 11 final responses incorrectly reported that the requested change succeeded.",
         metrics: [
-          ["Prevalence", "Affected traces", "63", "of 525 traces with tool activity · 12%", "bad"],
-          ["Reach", "Affected threads", "51", "of 418 threads with tool activity · 12.2%", "bad"],
-          ["Affected unit", "Failed tool calls", "84", "of 700 traced tool calls · 12%", "bad"],
-          ["Consequence", "Misleading responses", "11", "of 63 affected traces · 17.5%", "bad"]
+          ["Evidence", "Linked traces", "63", "", "bad"],
+          ["Reach", "Unique threads", "51", "", "bad"],
+          ["Detected event", "Failed calls", "84", "", "bad"],
+          ["Confirmed outcome", "False successes", "11", "", "bad"]
         ],
-        chart: ["Affected traces over time", "Count · Daily", [4,7,10,14,5,6,8,5,11,7,9,13,6,12,16,10,14,8,18,7,6,13,8,4,15]],
         traceNote: "Showing different account tools failing through the same authentication client, followed by missing recovery and misleading responses.",
         stats: "1 turn · Cluster P50 6.8s · 1.1K tokens · $0.008",
         callout: ["First divergence", "update_billing_address received 401 token_expired from the shared AuthSession client. No refresh or retry occurred before the agent reported success."],
@@ -1620,12 +1650,11 @@
         title: "Agent invents refund eligibility that is not supported by policy",
         diagnosis: "The assistant states that annual plans are refundable within 60 days, although the retrieved policy only allows refunds within 30 days.",
         metrics: [
-          ["Prevalence", "Affected traces", "28", "of 640 · 4.4%", "bad"],
-          ["Reach", "Affected threads", "23", "of 412 · 5.6%", "bad"],
-          ["Affected unit", "Unsupported claims", "34", "of 1,820 replies · 1.9%", "bad"],
-          ["Consequence", "High-risk billing responses", "6", "of 34 unsupported claims · 17.6%", "warn"]
+          ["Evidence", "Linked traces", "28", "", "bad"],
+          ["Reach", "Unique threads", "23", "", "bad"],
+          ["Detected event", "Unsupported claims", "34", "", "bad"],
+          ["Confirmed outcome", "High-risk claims", "6", "", "warn"]
         ],
-        chart: ["Unsupported claims over time", "Count · 6-hour window", [1,0,2,1,3,1,1,4,2,3,5,2,1,4,3,6,2,4,3,5,2,4]],
         traceNote: "Showing the claim, retrieved source, and contradiction.",
         stats: "2 turns · Cluster P50 6.4s · 2.8K tokens · $0.015",
         callout: ["Unsupported claim", "The answer says “within 60 days,” while the retrieved refund policy explicitly states 30 days."],
@@ -1643,12 +1672,11 @@
         title: "Agent repeats the same inventory lookup without using the prior result",
         diagnosis: "The agent invokes check_inventory an average of five times per affected trace with identical arguments, increasing latency and model/tool costs without changing the answer.",
         metrics: [
-          ["Prevalence", "Affected traces", "46", "of 525 · 8.8%", "bad"],
-          ["Reach", "Affected threads", "39", "of 418 · 9.3%", "bad"],
-          ["Affected unit", "Excess tool cost", "$18.42", "Across affected traces", "bad"],
-          ["Consequence", "Added P50 latency", "18.6s", "From repeated tool and model calls", "warn"]
+          ["Evidence", "Linked traces", "46", "", "bad"],
+          ["Detected event", "Repeated calls", "184", "", "bad"],
+          ["Recorded cost", "Repeat-call cost", "$18.42", "", "bad"],
+          ["Recorded time", "Repeat-call time", "18m 36s", "", "warn"]
         ],
-        chart: ["Repeated calls over time", "Count · Daily", [8,12,11,16,10,14,13,22,18,16,21,25,15,19,24,17,28,26,20,27,22,29]],
         traceNote: "Collapsing identical calls and showing repetition, added latency, and cost.",
         stats: "1 turn · Cluster P50 24.8s · 6.9K tokens · $0.041",
         callout: ["Repeated sequence", "check_inventory was called five times with the same SKU and warehouse. Every call returned the same value."],
@@ -1668,12 +1696,11 @@
         title: "Response synthesis dominates latency after all required evidence is available",
         diagnosis: "Final model calls receive large amounts of redundant context—duplicated retrieval or unrelated conversation history—and dominate end-to-end latency.",
         metrics: [
-          ["Prevalence", "Slow traces", "92", "of 720 · 12.8%", "bad"],
-          ["Reach", "Affected threads", "84", "of 560 · 15%", "bad"],
-          ["Affected unit", "P50 synthesis latency", "10.98s", "89% of end-to-end latency", "bad"],
-          ["Consequence", "Excess model cost", "$7.36", "From duplicated context", "warn"]
+          ["Evidence", "Linked traces", "92", "", "bad"],
+          ["Reach", "Unique threads", "84", "", "bad"],
+          ["Latency", "P50 latency", "10.98s", "", "bad"],
+          ["Tail latency", "P95 latency", "21.40s", "", "warn"]
         ],
-        chart: ["Slow traces over time", "Count · 6-hour window", [4,5,4,6,5,7,6,9,8,7,11,10,8,12,11,14,13,11,15,14,12,16]],
         traceNote: "Showing the critical path, token accumulation, and slowest span.",
         stats: "2 turns · Cluster P50 12.4s · 18.2K tokens · $0.082",
         callout: ["Critical-path span", "synthesize_response accounts for 89% of trace latency and receives 7.1K duplicated tokens."],
@@ -1691,12 +1718,11 @@
         title: "Deployment removed the instruction to ask for version details before troubleshooting",
         diagnosis: "After prompt version v43 shipped, the agent began guessing upgrade causes instead of collecting the LangChain, LangGraph, and Python versions required for diagnosis.",
         metrics: [
-          ["Prevalence", "Affected traces", "71", "of 680 · 10.4%", "bad"],
-          ["Reach", "Affected threads", "63", "of 492 · 12.8%", "bad"],
-          ["Affected unit", "Changed responses", "84", "since prompt v43", "warn"],
-          ["Consequence", "Lower-quality responses", "29", "34.5% of changed responses", "bad"]
+          ["Evidence", "Linked traces", "71", "", "bad"],
+          ["Reach", "Unique threads", "63", "", "bad"],
+          ["Detected event", "Failed evaluations", "84", "", "warn"],
+          ["Confirmed outcome", "Quality failures", "29", "", "bad"]
         ],
-        chart: ["Affected traces by prompt version", "Count · Deployment marked", [2,3,1,2,3,2,4,3,2,3,4,3,5,12,14,11,16,13,17,15,18,16]],
         traceNote: "Combining the selected message with the prompt-version diff that explains it.",
         stats: "2 turns · Cluster P50 5.9s · 1.6K tokens · $0.012",
         callout: ["Behavior changed after v43", "The selected trace uses prompt v43, where the required version-clarification instruction is absent."],
@@ -1714,12 +1740,11 @@
         title: "Agent cancels subscriptions when users only ask about cancellation options",
         diagnosis: "The cancellation tool description is ambiguous, causing informational questions to be treated as authorization to cancel immediately.",
         metrics: [
-          ["Prevalence", "Affected traces", "38", "of 525 · 7.2%", "bad"],
-          ["Reach", "Affected threads", "34", "of 418 · 8.1%", "bad"],
-          ["Affected unit", "Wrong invocations", "44", "of 1,280 tool calls · 3.4%", "bad"],
-          ["Consequence", "Unwanted cancellations", "19", "50% of affected traces", "bad"]
+          ["Evidence", "Linked traces", "38", "", "bad"],
+          ["Reach", "Unique threads", "34", "", "bad"],
+          ["Detected event", "Wrong selections", "44", "", "bad"],
+          ["Confirmed outcome", "Completed wrong actions", "19", "", "bad"]
         ],
-        chart: ["Wrong tool invocations over time", "Count · Daily", [1,2,1,3,2,4,3,2,5,4,3,6,4,5,7,3,6,5,8,6,7,9]],
         traceNote: "Showing intent, tool selection, arguments, and irreversible consequence.",
         stats: "1 turn · Cluster P50 4.3s · 940 tokens · $0.007",
         callout: ["Wrong action selected", "The user asked what cancellation would involve; cancel_subscription was invoked without confirmation."],
@@ -1740,12 +1765,11 @@
         title: "Agent discloses protected data when authorization checks return no decision",
         diagnosis: "When an authorization check times out, is unavailable, or fails, the workflow treats the missing decision as allowed and discloses protected account, workspace, or organization data.",
         metrics: [
-          ["Prevalence", "Affected traces", "17", "of 525 · 3.2%", "bad"],
-          ["Reach", "Affected threads", "16", "of 418 · 3.8%", "bad"],
-          ["Affected unit", "Bypassed checks", "21", "of 930 checks · 2.3%", "bad"],
-          ["Consequence", "Restricted disclosures", "7", "41% of affected traces", "bad"]
+          ["Evidence", "Linked traces", "17", "", "bad"],
+          ["Reach", "Affected accounts", "12", "", "bad"],
+          ["Detected event", "Failed-open checks", "21", "", "bad"],
+          ["Confirmed outcome", "Data exposures", "7", "", "bad"]
         ],
-        chart: ["Bypassed checks over time", "Count · 6-hour window", [0,1,0,0,1,0,2,1,0,1,2,0,1,3,1,2,1,3,2,2,4,3]],
         traceNote: "Showing the failed policy decision and the protected output that followed.",
         stats: "1 turn · Cluster P50 7.2s · 1.9K tokens · $0.014",
         callout: ["Fail-open behavior", "verify_access timed out, but the workflow continued as authorized and returned restricted billing data."],
@@ -2149,7 +2173,8 @@
     let activeSetup = "github";
     let activeNext = "fix";
     let includeBaseline = false;
-    let showImpactComparisons = true;
+    let showMetricDefinitions = false;
+    let showBaselineComparisons = false;
     let activeSeverity = "High";
     let activeStatus = "To Review";
     let activeSidebarId = "sidebar-0";
@@ -2159,7 +2184,7 @@
     const readSidebarIssues = new Set(["sidebar-0"]);
     const sidebarPriorityOverrides = new Map();
     const sidebarIssueDiagnoses = {
-      "sidebar-0": "Over the last 72 hours, 84 of 700 traced tool calls (12%) returned a 401 or 403 across four account tools. In affected runs, the workflow skipped the required recovery or failure-handling path. 11 final responses incorrectly told users that the requested account change succeeded.",
+      "sidebar-0": "Across linked traces, 84 of 700 observed tool calls (12%) returned a 401 or 403 across four account tools. In those runs, the workflow skipped the required recovery or failure-handling path. 11 final responses incorrectly told users that the requested account change succeeded.",
       "sidebar-1": "After a search tool returns a valid result, the agent sometimes repeats the same call with unchanged arguments instead of using the evidence already available. These retries add latency and cost without improving the answer.",
       "sidebar-2": "The assistant introduces policy details that are absent from the retrieved context. Affected responses present unsupported eligibility, timing, or exception rules as if they came from the cited source.",
       "sidebar-3": "All required evidence is available before the final response begins, but response synthesis still adds more than eight seconds because the model receives duplicated context and performs unnecessary additional reasoning.",
@@ -2179,6 +2204,173 @@
       "sidebar-17": "Informational questions about refund eligibility are routed into the refund workflow as if the user requested a transaction. The agent begins a consequential action before confirming intent.",
       "sidebar-18": "The assistant promises enterprise response or resolution times that are not supported by the retrieved SLA documentation. These guarantees create commitments that the published policy does not make.",
       "sidebar-19": "Search calls continue after the configured result threshold has already been met. Later retries return no new evidence but increase tool usage, latency, and cost."
+    };
+
+    const impactScanTimes = {
+      june: ["2026-06-07T08:12:00Z", "2026-06-09T14:37:00Z", "2026-06-12T09:18:00Z", "2026-06-16T17:44:00Z", "2026-06-21T03:06:00Z", "2026-06-24T19:22:00Z"],
+      lateJune: ["2026-06-11T06:48:00Z", "2026-06-13T21:16:00Z", "2026-06-17T10:03:00Z", "2026-06-20T16:51:00Z", "2026-06-25T08:29:00Z", "2026-06-29T22:14:00Z"],
+      july: ["2026-07-02T11:07:00Z", "2026-07-05T18:42:00Z", "2026-07-09T07:34:00Z", "2026-07-13T15:26:00Z", "2026-07-18T02:19:00Z", "2026-07-23T20:08:00Z"],
+      august: ["2026-08-03T09:11:00Z", "2026-08-07T16:24:00Z", "2026-08-12T04:53:00Z", "2026-08-17T13:38:00Z", "2026-08-22T21:06:00Z", "2026-08-27T08:47:00Z"]
+    };
+    const impactMetricDefinitions = {
+      "Linked traces": "Engine-linked evidence traces",
+      "Unique threads": "Distinct linked thread IDs",
+      "Affected accounts": "Distinct linked accounts",
+      "Failed calls": "401/403 tool failures",
+      "False successes": "Failures claimed successful",
+      "Unsupported claims": "Claims lacking source support",
+      "High-risk claims": "High-risk unsupported claims",
+      "Repeated calls": "Redundant retry calls",
+      "Repeat-call cost": "Cost of redundant calls",
+      "Repeat-call time": "Time in redundant calls",
+      "P50 latency": "Median linked-trace latency",
+      "P95 latency": "Linked-trace 95th percentile",
+      "Failed evaluations": "Evaluator failures",
+      "Quality failures": "Quality evaluator failures",
+      "Wrong selections": "Tool differs from intent",
+      "Completed wrong actions": "Wrong actions completed",
+      "Failed-open checks": "Failed checks allowing action",
+      "Data exposures": "Protected content exposed"
+    };
+    const compactBaseline = value => value
+      .replace("Comparable traces: ", "Comparable ")
+      .replace("Total/trace ", "Cost/trace ")
+      .replace("P50 total ", "P50 ")
+      .replace(" · comparable ", " vs ");
+    const barSeries = (unit, values, prefix = "", suffix = "") => ({ type: "bar", unit, values, prefix, suffix });
+    const lineSeries = (unit, values, suffix = "s", prefix = "") => ({ type: "line", unit, values, prefix, suffix });
+    const impactMetric = (label, value, definition, chart, baseline = "", tone = "bad") => ({
+      label,
+      value,
+      definition: impactMetricDefinitions[label] || definition,
+      chart,
+      baseline: compactBaseline(baseline),
+      tone
+    });
+    const impactProfile = (issue, scans, metrics, coverage) => ({ issue, scans, metrics, coverage });
+    const linkedDefinition = "Traces Engine attached to this issue";
+    const threadDefinition = "Distinct thread or session IDs represented";
+    const sidebarImpactProfiles = {
+      "sidebar-0": impactProfile("auth", impactScanTimes.june, [
+        impactMetric("Linked traces", "63", linkedDefinition, barSeries("Traces per scan", [6,8,9,11,13,16])),
+        impactMetric("Unique threads", "51", threadDefinition, barSeries("New threads per scan", [5,7,8,9,10,12])),
+        impactMetric("Failed calls", "84", "Tool calls returning an auth failure", barSeries("Failed calls per scan", [8,10,12,15,17,22])),
+        impactMetric("False successes", "11", "Failures followed by a success claim", barSeries("False successes per scan", [1,1,2,2,2,3]))
+      ], "Production · 6 scans · Jun 7–24"),
+      "sidebar-1": impactProfile("looping", impactScanTimes.june, [
+        impactMetric("Linked traces", "154", linkedDefinition, barSeries("Traces per scan", [18,22,25,27,29,33])),
+        impactMetric("Repeated calls", "486", "Calls classified as redundant retries", barSeries("Repeated calls per scan", [54,66,72,86,96,112])),
+        impactMetric("Repeat-call cost", "$42.76", "Recorded cost of redundant calls", barSeries("Repeat-call cost", [4.84,5.72,6.31,7.64,8.12,10.13], "$"), "Total/trace $0.47 · comparable $0.19"),
+        impactMetric("Repeat-call time", "19m 54s", "Measured duration of redundant calls", barSeries("Repeat-call time", [134,166,188,214,231,261], "", "s"), "P50 total 12.6s · comparable 4.8s", "warn")
+      ], "Production · 6 dynamic scans · Jun 7–24"),
+      "sidebar-2": impactProfile("hallucination", impactScanTimes.lateJune, [
+        impactMetric("Linked traces", "38", linkedDefinition, barSeries("Traces per scan", [4,5,6,7,7,9])),
+        impactMetric("Unique threads", "31", threadDefinition, barSeries("New threads per scan", [3,4,5,6,6,7])),
+        impactMetric("Unsupported claims", "47", "Claims not supported by retrieved sources", barSeries("Claims per scan", [5,6,7,9,9,11]), "Comparable cohort: 12"),
+        impactMetric("High-risk claims", "9", "Unsupported claims with material user risk", barSeries("High-risk claims per scan", [1,1,1,2,2,2]), "Comparable cohort: 2", "warn")
+      ], "Production · 6 dynamic scans · Jun 11–29"),
+      "sidebar-3": impactProfile("latency", impactScanTimes.lateJune, [
+        impactMetric("Linked traces", "91", linkedDefinition, barSeries("Traces per scan", [11,13,14,16,17,20])),
+        impactMetric("Unique threads", "76", threadDefinition, barSeries("New threads per scan", [9,11,12,13,14,17])),
+        impactMetric("P50 latency", "9.8s", "Median end-to-end linked-trace latency", lineSeries("P50 at scan", [7.2,7.8,8.1,8.9,9.4,9.8]), "Comparable P50: 5.1s"),
+        impactMetric("P95 latency", "18.4s", "95th-percentile linked-trace latency", lineSeries("P95 at scan", [13.1,14.4,14.9,16.2,17.6,18.4]), "Comparable P95: 10.6s", "warn")
+      ], "Production · 6 dynamic scans · Jun 11–29"),
+      "sidebar-4": impactProfile("wrongTool", impactScanTimes.july, [
+        impactMetric("Linked traces", "27", linkedDefinition, barSeries("Traces per scan", [3,4,4,5,5,6])),
+        impactMetric("Unique threads", "24", threadDefinition, barSeries("New threads per scan", [3,3,4,4,5,5])),
+        impactMetric("Wrong selections", "31", "Tool choices inconsistent with user intent", barSeries("Selections per scan", [3,4,5,5,6,8])),
+        impactMetric("Completed wrong actions", "12", "Wrong selections that changed user state", barSeries("Actions per scan", [1,1,2,2,3,3]))
+      ], "Production · 6 dynamic scans · Jul 2–23"),
+      "sidebar-5": impactProfile("auth", impactScanTimes.lateJune, [
+        impactMetric("Linked traces", "46", linkedDefinition, barSeries("Traces per scan", [5,6,7,8,9,11])),
+        impactMetric("Unique threads", "39", threadDefinition, barSeries("New threads per scan", [4,5,6,7,8,9])),
+        impactMetric("Failed calls", "58", "Payment lookups returning failure status", barSeries("Failed calls per scan", [6,8,9,10,11,14])),
+        impactMetric("False successes", "8", "Failures followed by retrieved-data claims", barSeries("False successes per scan", [1,1,1,1,2,2]))
+      ], "Production · 6 dynamic scans · Jun 11–29"),
+      "sidebar-6": impactProfile("hallucination", impactScanTimes.july, [
+        impactMetric("Linked traces", "72", linkedDefinition, barSeries("Traces per scan", [8,10,11,12,14,17])),
+        impactMetric("Unique threads", "61", threadDefinition, barSeries("New threads per scan", [7,8,9,10,12,15])),
+        impactMetric("Unsupported claims", "88", "Claims missing governing refund sources", barSeries("Claims per scan", [9,11,13,15,18,22]), "Comparable cohort: 18"),
+        impactMetric("High-risk claims", "14", "Unsupported refund eligibility claims", barSeries("High-risk claims per scan", [1,2,2,3,3,3]), "Comparable cohort: 3", "warn")
+      ], "Production · 6 dynamic scans · Jul 2–23"),
+      "sidebar-7": impactProfile("prompt", impactScanTimes.july, [
+        impactMetric("Linked traces", "33", linkedDefinition, barSeries("Traces per scan", [3,4,5,6,7,8])),
+        impactMetric("Unique threads", "29", threadDefinition, barSeries("New threads per scan", [3,4,4,5,6,7])),
+        impactMetric("Failed evaluations", "41", "Responses failing the routing evaluator", barSeries("Failures per scan", [4,5,6,7,9,10]), "Comparable cohort: 21"),
+        impactMetric("Quality failures", "18", "Failed evaluations with degraded routing", barSeries("Quality failures per scan", [2,2,3,3,4,4]), "Comparable cohort: 8", "warn")
+      ], "Production · prompt v43 · 6 scans"),
+      "sidebar-8": impactProfile("guardrail", impactScanTimes.july, [
+        impactMetric("Linked traces", "19", linkedDefinition, barSeries("Traces per scan", [2,2,3,3,4,5])),
+        impactMetric("Affected accounts", "12", "Distinct accounts represented by linked traces", barSeries("New accounts per scan", [1,2,2,2,2,3])),
+        impactMetric("Failed-open checks", "23", "Policy checks whose missing decision allowed", barSeries("Checks per scan", [2,3,3,4,5,6])),
+        impactMetric("Data exposures", "7", "Responses exposing protected internal logic", barSeries("Exposures per scan", [0,1,1,1,2,2]))
+      ], "Production · 6 dynamic scans · Jul 2–23"),
+      "sidebar-9": impactProfile("latency", impactScanTimes.july, [
+        impactMetric("Linked traces", "58", linkedDefinition, barSeries("Traces per scan", [6,8,9,10,11,14])),
+        impactMetric("Unique threads", "49", threadDefinition, barSeries("New threads per scan", [5,7,7,9,9,12])),
+        impactMetric("P50 latency", "8.7s", "Median end-to-end linked-trace latency", lineSeries("P50 at scan", [6.4,6.9,7.1,7.7,8.2,8.7]), "Comparable P50: 4.9s"),
+        impactMetric("P95 latency", "15.9s", "95th-percentile linked-trace latency", lineSeries("P95 at scan", [11.2,11.8,12.7,13.6,14.8,15.9]), "Comparable P95: 9.8s", "warn")
+      ], "Production · 6 dynamic scans · Jul 2–23"),
+      "sidebar-10": impactProfile("looping", impactScanTimes.july, [
+        impactMetric("Linked traces", "41", linkedDefinition, barSeries("Traces per scan", [4,5,6,7,8,11])),
+        impactMetric("Repeated calls", "123", "Redundant inventory calls with equal arguments", barSeries("Repeated calls per scan", [12,15,18,21,24,33])),
+        impactMetric("Repeat-call cost", "$11.64", "Recorded cost of redundant calls", barSeries("Repeat-call cost", [1.12,1.38,1.66,1.94,2.24,3.30], "$"), "Total/trace $0.44 · comparable $0.16"),
+        impactMetric("Repeat-call time", "5m 18s", "Measured duration of redundant calls", barSeries("Repeat-call time", [31,39,46,55,63,84], "", "s"), "P50 total 9.7s · comparable 3.9s", "warn")
+      ], "Production · 6 dynamic scans · Jul 2–23"),
+      "sidebar-11": impactProfile("wrongTool", impactScanTimes.july, [
+        impactMetric("Linked traces", "24", linkedDefinition, barSeries("Traces per scan", [2,3,4,4,5,6])),
+        impactMetric("Unique threads", "21", threadDefinition, barSeries("New threads per scan", [2,3,3,4,4,5])),
+        impactMetric("Wrong selections", "28", "Escalations selected before intake completed", barSeries("Selections per scan", [3,3,4,5,6,7])),
+        impactMetric("Completed wrong actions", "5", "Premature escalations sent to support", barSeries("Actions per scan", [0,1,1,1,1,1]))
+      ], "Production · 6 dynamic scans · Jul 2–23"),
+      "sidebar-12": impactProfile("hallucination", impactScanTimes.august, [
+        impactMetric("Linked traces", "31", linkedDefinition, barSeries("Traces per scan", [3,4,5,5,6,8])),
+        impactMetric("Unique threads", "27", threadDefinition, barSeries("New threads per scan", [3,3,4,5,5,7])),
+        impactMetric("Unsupported claims", "39", "Plan-limit claims absent from retrieved docs", barSeries("Claims per scan", [4,5,6,7,8,9]), "Comparable cohort: 8"),
+        impactMetric("High-risk claims", "8", "Unsupported limits affecting purchase decisions", barSeries("High-risk claims per scan", [1,1,1,1,2,2]), "Comparable cohort: 2", "warn")
+      ], "Production · 6 dynamic scans · Aug 3–27"),
+      "sidebar-13": impactProfile("auth", impactScanTimes.august, [
+        impactMetric("Linked traces", "29", linkedDefinition, barSeries("Traces per scan", [3,4,4,5,6,7])),
+        impactMetric("Unique threads", "25", threadDefinition, barSeries("New threads per scan", [3,3,4,4,5,6])),
+        impactMetric("Failed calls", "35", "Subscription calls blocked by expired sessions", barSeries("Failed calls per scan", [4,4,5,6,7,9])),
+        impactMetric("False successes", "6", "Failures followed by completion language", barSeries("False successes per scan", [0,1,1,1,1,2]))
+      ], "Production · 6 dynamic scans · Aug 3–27"),
+      "sidebar-14": impactProfile("prompt", impactScanTimes.august, [
+        impactMetric("Linked traces", "22", linkedDefinition, barSeries("Traces per scan", [2,3,3,4,4,6])),
+        impactMetric("Unique threads", "20", threadDefinition, barSeries("New threads per scan", [2,3,3,3,4,5])),
+        impactMetric("Failed evaluations", "25", "Responses failing required-intake evaluation", barSeries("Failures per scan", [2,3,4,4,5,7]), "Comparable cohort: 13"),
+        impactMetric("Quality failures", "11", "Failed evaluations with unverified diagnoses", barSeries("Quality failures per scan", [1,1,2,2,2,3]), "Comparable cohort: 5", "warn")
+      ], "Production · prompt v44 · 6 scans"),
+      "sidebar-15": impactProfile("guardrail", impactScanTimes.august, [
+        impactMetric("Linked traces", "17", linkedDefinition, barSeries("Traces per scan", [1,2,3,3,4,4])),
+        impactMetric("Affected accounts", "9", "Distinct accounts represented by linked traces", barSeries("New accounts per scan", [1,1,1,2,2,2])),
+        impactMetric("Failed-open checks", "21", "Timed-out checks that allowed export", barSeries("Checks per scan", [2,2,3,4,5,5])),
+        impactMetric("Data exposures", "4", "Exports containing restricted workspace data", barSeries("Exposures per scan", [0,0,1,1,1,1]))
+      ], "Production · 6 dynamic scans · Aug 3–27"),
+      "sidebar-16": impactProfile("latency", impactScanTimes.august, [
+        impactMetric("Linked traces", "64", linkedDefinition, barSeries("Traces per scan", [7,8,10,11,13,15])),
+        impactMetric("Unique threads", "54", threadDefinition, barSeries("New threads per scan", [6,7,8,9,11,13])),
+        impactMetric("P50 latency", "11.6s", "Median end-to-end linked-trace latency", lineSeries("P50 at scan", [8.1,8.6,9.2,9.9,10.7,11.6]), "Comparable P50: 5.7s"),
+        impactMetric("P95 latency", "22.7s", "95th-percentile linked-trace latency", lineSeries("P95 at scan", [15.8,16.7,17.9,19.1,20.8,22.7]), "Comparable P95: 11.9s", "warn")
+      ], "Production · 6 dynamic scans · Aug 3–27"),
+      "sidebar-17": impactProfile("wrongTool", impactScanTimes.august, [
+        impactMetric("Linked traces", "18", linkedDefinition, barSeries("Traces per scan", [2,2,3,3,4,4])),
+        impactMetric("Unique threads", "16", threadDefinition, barSeries("New threads per scan", [2,2,2,3,3,4])),
+        impactMetric("Wrong selections", "20", "Refund workflows selected without intent", barSeries("Selections per scan", [2,2,3,4,4,5])),
+        impactMetric("Completed wrong actions", "7", "Refund workflows that initiated a transaction", barSeries("Actions per scan", [0,1,1,1,2,2]))
+      ], "Production · 6 dynamic scans · Aug 3–27"),
+      "sidebar-18": impactProfile("hallucination", impactScanTimes.august, [
+        impactMetric("Linked traces", "26", linkedDefinition, barSeries("Traces per scan", [2,3,4,5,5,7])),
+        impactMetric("Unique threads", "23", threadDefinition, barSeries("New threads per scan", [2,3,3,4,5,6])),
+        impactMetric("Unsupported claims", "32", "SLA claims absent from retrieved policy", barSeries("Claims per scan", [3,4,5,5,7,8]), "Comparable cohort: 7"),
+        impactMetric("High-risk claims", "5", "Unsupported claims creating commitments", barSeries("High-risk claims per scan", [0,1,1,1,1,1]), "Comparable cohort: 1", "warn")
+      ], "Production · 6 dynamic scans · Aug 3–27"),
+      "sidebar-19": impactProfile("looping", impactScanTimes.august, [
+        impactMetric("Linked traces", "37", linkedDefinition, barSeries("Traces per scan", [3,4,6,7,8,9])),
+        impactMetric("Repeated calls", "94", "Search calls after the result threshold", barSeries("Repeated calls per scan", [8,11,14,17,20,24])),
+        impactMetric("Repeat-call cost", "$8.73", "Recorded cost of redundant calls", barSeries("Repeat-call cost", [.72,.94,1.19,1.53,1.81,2.54], "$"), "Total/trace $0.36 · comparable $0.14"),
+        impactMetric("Repeat-call time", "4m 1s", "Measured duration of redundant calls", barSeries("Repeat-call time", [21,29,36,43,50,62], "", "s"), "P50 total 8.1s · comparable 3.4s", "warn")
+      ], "Production · 6 dynamic scans · Aug 3–27")
     };
 
     const escapeHtml = (value) => String(value)
@@ -2291,12 +2483,12 @@
 
     function selectIssue(key, sidebarId = null, sidebarSeverity = null, sidebarTitle = null, sidebarLabel = null, sidebarTraceCount = null) {
       activeIssue = key;
-      activeSidebarId = sidebarId;
-      if (sidebarId) readSidebarIssues.add(sidebarId);
+      activeSidebarId = sidebarId || Object.keys(sidebarImpactProfiles).find(id => sidebarImpactProfiles[id].issue === key);
+      if (activeSidebarId) readSidebarIssues.add(activeSidebarId);
       activeSeverity = sidebarSeverity || issues[key].severity;
       activeSidebarTitle = sidebarTitle || issues[key].title;
       activeSidebarLabel = sidebarLabel || issues[key].label;
-      activeSidebarTraceCount = sidebarTraceCount || issues[key].metrics[0][2];
+      activeSidebarTraceCount = sidebarTraceCount || sidebarImpactProfiles[activeSidebarId]?.metrics[0].value || issues[key].metrics[0][2];
       selectedTrace = 0;
       selectedMetric = 0;
       selectedSpan = firstEvidenceIndex(issues[activeIssue]);
@@ -2378,39 +2570,28 @@
     }
 
     function renderImpact(issue) {
-      const order = [0, 1, 2, 3];
-      const titleCase = value => value.replace(/\b\w/g, letter => letter.toUpperCase());
-      const metrics = issue.metrics.map(metric => [...metric]);
-      metrics[0][2] = activeSidebarTraceCount;
-      metrics.forEach(metric => {
-        metric[3] = metric[3].replace(/of \d+ affected traces/i, `of ${activeSidebarTraceCount} affected traces`);
-      });
-      const comparisonDetails = {
-        auth: ["12% current · ↑3.1pp", "12.2% of active threads", "12% of traced tool calls", "17.5% of affected traces"],
-        hallucination: ["4.4% current · ↑1.6pp", "5.6% of active threads", "1.9% of customer replies", "17.6% of unsupported claims"],
-        looping: ["12.3% current · ↑4.2pp", "8.7% of active threads", "$0.12 per affected trace", "18.6s slower than 4.2s baseline"],
-        latency: ["12.8% current · ↑3.7pp", "15% of active threads", "Similar traces take 2.4s", "$0.08 per slow trace"],
-        prompt: ["10.4% current · ↑7.8pp", "12.8% of active threads", "Since prompt v43", "34.5% of changed responses"],
-        wrongTool: ["7.2% current · ↑2.9pp", "8.1% of active threads", "3.4% of traced tool calls", "50% of affected traces"],
-        guardrail: ["3.2% current · ↑1.8pp", "3.8% of active threads", "2.3% of authorization checks", "41% of affected traces"]
-      };
-      if (showImpactComparisons) {
-        comparisonDetails[activeIssue].forEach((detail, index) => { metrics[index][3] = detail; });
-        if (activeIssue === "looping") metrics[1][2] = "91";
-      }
-      document.getElementById("impact-coverage").textContent = activeIssue === "auth"
-        ? "Production · Last 72 hours · 700/700 traced tool calls analyzed"
-        : "Production · Last 72 hours · Metrics adapt to the issue";
+      const profile = sidebarImpactProfiles[activeSidebarId]
+        || Object.values(sidebarImpactProfiles).find(candidate => candidate.issue === activeIssue);
+      const metrics = profile.metrics;
+      const titleCase = value => value.replace(/\b[a-z]/g, letter => letter.toUpperCase());
+      const displayMetricLabel = value => value === "Linked traces" ? "Affected traces" : value;
+      document.getElementById("impact-coverage").textContent = profile.coverage;
       const metricsNode = document.getElementById("metrics");
-      metricsNode.classList.toggle("show-comparison-context", showImpactComparisons);
-      metricsNode.innerHTML = order.map(index => {
-        const [, label, value, detail, tone] = metrics[index];
+      const visibleContextCount = Number(showMetricDefinitions)
+        + Number(showBaselineComparisons && metrics.some(metric => metric.baseline));
+      metricsNode.classList.toggle("has-impact-context", visibleContextCount > 0);
+      metricsNode.classList.toggle("has-two-context-lines", visibleContextCount > 1);
+      metricsNode.innerHTML = metrics.map((metric, index) => {
+        const contextLines = [
+          showMetricDefinitions ? metric.definition : "",
+          showBaselineComparisons ? metric.baseline : ""
+        ].filter(Boolean);
         return `
         <button class="metric ${index === selectedMetric ? "selected" : ""}" data-metric="${index}" aria-pressed="${index === selectedMetric}">
-          <div class="metric-label">${escapeHtml(titleCase(label))}</div>
+          <div class="metric-label">${escapeHtml(titleCase(displayMetricLabel(metric.label)))}</div>
           <div class="metric-main">
-            <span class="metric-value">${escapeHtml(value)}</span>
-            <span class="metric-detail ${tone}">${escapeHtml(detail)}</span>
+            <span class="metric-value">${escapeHtml(metric.value)}</span>
+            <span class="metric-context-lines">${contextLines.map(detail => `<span class="metric-detail ${metric.tone}">${escapeHtml(detail)}</span>`).join("")}</span>
           </div>
         </button>
       `}).join("");
@@ -2420,96 +2601,104 @@
           renderImpact(issue);
         });
       });
-      const source = issue.chart[2].map((_, index, items) => items[(index + selectedMetric * 3) % items.length]);
-      const lineMetric = {
-        looping: {
-          2: { target: 18.42, mode: "total", prefix: "$", suffix: "", unit: "Daily excess cost" },
-          3: { target: 18.6, mode: "average", prefix: "", suffix: "s", unit: "Daily added P50 latency" }
-        },
-        latency: {
-          2: { target: 10.98, mode: "average", prefix: "", suffix: "s", unit: "Daily P50 synthesis latency" },
-          3: { target: 7.36, mode: "total", prefix: "$", suffix: "", unit: "Daily excess model cost" }
-        }
-      }[activeIssue]?.[selectedMetric];
-      const numericMetricValue = Number.parseFloat(metrics[selectedMetric][2].replace(/[^0-9.]/g, ""));
-      const total = Number.isFinite(numericMetricValue) ? numericMetricValue : 0;
-      let values;
-      if (lineMetric) {
-        const sourceTotal = source.reduce((sum, value) => sum + value, 0);
-        const sourceAverage = sourceTotal / source.length;
-        values = source.map(value => lineMetric.mode === "total"
-          ? (value / sourceTotal) * lineMetric.target
-          : (value / sourceAverage) * lineMetric.target);
-      } else {
-        const weightTotal = source.reduce((sum, value) => sum + value, 0);
-        const exact = source.map(value => (value / weightTotal) * total);
-        values = exact.map(value => Math.floor(value));
-        const remainder = total - values.reduce((sum, value) => sum + value, 0);
-        exact
-          .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
-          .sort((a, b) => b.fraction - a.fraction)
-          .slice(0, remainder)
-          .forEach(({ index }) => { values[index] += 1; });
-      }
-      const metricLabel = titleCase(metrics[selectedMetric][1]);
-      const title = `${metricLabel} Over Time`;
-      const cadence = "6-hour window";
-      const unit = selectedMetric === 0
-        ? `Traces · ${cadence}`
-        : selectedMetric === 1
-          ? `Threads · ${cadence}`
-          : selectedMetric === 3
-            ? `User-visible events · ${cadence}`
-            : `Count · ${cadence}`;
+      const selected = metrics[selectedMetric];
+      const chart = selected.chart;
+      const isLine = chart.type === "line";
+      const rawValues = chart.values;
+      const rawTimestamps = profile.scans;
+      const pointCount = 22;
+      const firstTimestamp = new Date(rawTimestamps[0]).getTime();
+      const lastTimestamp = new Date(rawTimestamps.at(-1)).getTime();
+      const timestamps = Array.from({ length: pointCount }, (_, index) =>
+        new Date(firstTimestamp + ((lastTimestamp - firstTimestamp) * index) / (pointCount - 1)).toISOString()
+      );
+      const values = isLine
+        ? Array.from({ length: pointCount }, (_, index) => {
+            const position = (index * (rawValues.length - 1)) / (pointCount - 1);
+            const left = Math.floor(position);
+            const right = Math.min(rawValues.length - 1, left + 1);
+            const progress = position - left;
+            return Number((rawValues[left] + (rawValues[right] - rawValues[left]) * progress).toFixed(2));
+          })
+        : rawValues.flatMap((value, rawIndex) => {
+            const start = Math.round((rawIndex * pointCount) / rawValues.length);
+            const end = Math.round(((rawIndex + 1) * pointCount) / rawValues.length);
+            const slots = Math.max(1, end - start);
+            if (!Number.isInteger(value)) {
+              const share = Number((value / slots).toFixed(2));
+              return Array.from({ length: slots }, (_, slotIndex) =>
+                slotIndex === slots - 1 ? Number((value - share * (slots - 1)).toFixed(2)) : share
+              );
+            }
+            const base = Math.floor(value / slots);
+            const remainder = value - base * slots;
+            return Array.from({ length: slots }, (_, slotIndex) =>
+              base + (slotIndex >= slots - remainder ? 1 : 0)
+            );
+          });
       const max = Math.max(...values);
-      const axisStep = lineMetric
+      const axisStep = isLine || chart.prefix === "$" || chart.suffix === "s"
         ? Math.max(.1, Math.ceil((max / 3) * 10) / 10)
         : Math.max(1, Math.ceil(max / 3));
       const axisMax = axisStep * 3;
-      const formatChartValue = value => lineMetric
-        ? `${lineMetric.prefix}${value.toFixed(value >= 10 ? 1 : 2)}${lineMetric.suffix}`
-        : String(value);
+      const formatChartValue = value => {
+        if (!isLine && !chart.prefix && !chart.suffix) return String(value);
+        if (chart.suffix === "s" && !chart.prefix) {
+          if (value >= 60) {
+            const rounded = Math.round(value);
+            return `${Math.floor(rounded / 60)}m ${rounded % 60}s`;
+          }
+          return `${Number.isInteger(value) ? value : value.toFixed(1)}s`;
+        }
+        const precision = Number.isInteger(value) && chart.prefix !== "$" ? 0 : value >= 10 ? 1 : 2;
+        return `${chart.prefix}${value.toFixed(precision)}${chart.suffix}`;
+      };
+      const formatScanTime = (timestamp, includeTime = false) => new Date(timestamp).toLocaleString("en-US", includeTime
+        ? { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }
+        : { month: "short", day: "numeric" });
       document.getElementById("axis-max").textContent = formatChartValue(axisMax);
       document.getElementById("axis-mid").textContent = formatChartValue(axisStep * 2);
       document.getElementById("axis-low").textContent = formatChartValue(axisStep);
-      document.getElementById("chart-title").textContent = title;
-      document.getElementById("chart-unit").textContent = lineMetric
-        ? `${lineMetric.unit} · ${metrics[selectedMetric][2]}`
-        : `${unit} · Total ${total}${activeIssue === "prompt" ? " · Dark bar: v43 deployed" : ""}`;
-      const chartEventsByIssue = {
-        auth: {
-          6: { title:"Access-token lifetime changed", time:"Jun 13 · 7:06 AM", detail:"Token lifetime: 90 minutes → 60 minutes", action:"View change", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
-          14: { title:"Production deployment", time:"Jun 21 · 3:42 PM", detail:"PR #172 · Centralize account API client", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
+      document.getElementById("chart-title").textContent = `${displayMetricLabel(selected.label)} over time`;
+      const chartUnit = chart.unit.replace(" per scan", "").replace(" at scan", "");
+      document.getElementById("chart-unit").textContent = `${chartUnit} · ${formatScanTime(timestamps[0])}–${formatScanTime(timestamps.at(-1))}`;
+      const chartEventsBySidebar = {
+        "sidebar-0": {
+          2: { title:"Access-token lifetime changed", time:"Jun 13 · 7:06 AM", detail:"Token lifetime: 90 minutes → 60 minutes", action:"View change", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
+          4: { title:"Production deployment", time:"Jun 21 · 3:42 PM", detail:"PR #172 · Centralize account API client", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
         },
-        hallucination: {
-          4: { title:"Refund policy documents reindexed", time:"Jun 11 · 9:18 AM", detail:"14 refund-policy documents were refreshed for retrieval", action:"View documents", marker:"icon-database.svg", actionIcon:"icon-database.svg" },
-          15: { title:"Prompt deployed", time:"Jun 22 · 1:24 PM", detail:"refund-policy-rag · prompt v18", action:"View prompt", marker:"icon-run-prompt.svg", actionIcon:"icon-message.svg" }
+        "sidebar-2": {
+          1: { title:"Refund policy documents reindexed", time:"Jun 13 · 9:18 AM", detail:"14 refund-policy documents were refreshed for retrieval", action:"View documents", marker:"icon-database.svg", actionIcon:"icon-database.svg" },
+          4: { title:"Prompt deployed", time:"Jun 25 · 1:24 PM", detail:"refund-policy-rag · prompt v18", action:"View prompt", marker:"icon-run-prompt.svg", actionIcon:"icon-message.svg" }
         },
-        looping: {
-          7: { title:"Agent iteration limit changed", time:"Jun 14 · 11:32 AM", detail:"Max iterations: 3 → 8", action:"View change", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
-          16: { title:"Graph deployed", time:"Jun 23 · 10:08 AM", detail:"PR #181 · Inventory retry routing", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
+        "sidebar-1": {
+          2: { title:"Agent iteration limit changed", time:"Jun 12 · 11:32 AM", detail:"Max iterations: 3 → 8", action:"View change", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
+          4: { title:"Graph deployed", time:"Jun 21 · 10:08 AM", detail:"PR #181 · Inventory retry routing", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
         },
-        latency: {
-          3: { title:"Conversation history limit changed", time:"Jun 10 · 2:16 PM", detail:"Included history: 12 → 50 turns", action:"View change", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
-          13: { title:"Retriever deployed", time:"Jun 20 · 4:05 PM", detail:"PR #187 · Expanded migration-source search", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
+        "sidebar-3": {
+          1: { title:"Conversation history limit changed", time:"Jun 13 · 2:16 PM", detail:"Included history: 12 → 50 turns", action:"View change", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
+          3: { title:"Retriever deployed", time:"Jun 20 · 4:05 PM", detail:"PR #187 · Expanded migration-source search", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
         },
-        prompt: {
-          5: { title:"Prompt v43 published", time:"Jun 12 · 8:41 AM", detail:"Removed required environment-intake block", action:"View prompt", marker:"icon-run-prompt.svg", actionIcon:"icon-message.svg" },
-          12: { title:"Prompt v43 deployed", time:"Jun 19 · 12:12 PM", detail:"upgrade-support-agent · production", action:"View deployment", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-deployment-code-figma.svg" }
+        "sidebar-7": {
+          1: { title:"Prompt v43 published", time:"Jul 5 · 8:41 AM", detail:"Removed required enterprise-routing block", action:"View prompt", marker:"icon-run-prompt.svg", actionIcon:"icon-message.svg" },
+          3: { title:"Prompt v43 deployed", time:"Jul 13 · 12:12 PM", detail:"enterprise-support-agent · production", action:"View deployment", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-deployment-code-figma.svg" }
         },
-        wrongTool: {
-          8: { title:"Tool description changed", time:"Jun 15 · 3:09 PM", detail:"PR #188 · cancel_subscription schema guidance removed", action:"View PR", marker:"icon-run-tool.svg", actionIcon:"icon-pr-popover-figma.svg" },
-          17: { title:"Agent deployed", time:"Jun 24 · 2:38 PM", detail:"PR #189 · Subscription tool cleanup", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
+        "sidebar-4": {
+          1: { title:"Tool description changed", time:"Jul 5 · 3:09 PM", detail:"PR #188 · cancel_subscription confirmation guidance removed", action:"View PR", marker:"icon-run-tool.svg", actionIcon:"icon-pr-popover-figma.svg" },
+          4: { title:"Agent deployed", time:"Jul 18 · 2:38 PM", detail:"PR #189 · Subscription tool cleanup", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
         },
-        guardrail: {
-          4: { title:"Authorization timeout changed", time:"Jun 11 · 6:52 AM", detail:"Policy decision timeout: 5s → 3s", action:"View change", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
-          11: { title:"Policy client deployed", time:"Jun 18 · 5:17 PM", detail:"PR #190 · Async authorization client", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
+        "sidebar-8": {
+          1: { title:"Policy response mapping changed", time:"Jul 5 · 6:52 AM", detail:"Internal policy labels added to response context", action:"View change", marker:"icon-settings.svg", actionIcon:"icon-settings.svg" },
+          3: { title:"Policy client deployed", time:"Jul 13 · 5:17 PM", detail:"PR #190 · Async authorization client", action:"View PR", marker:"icon-deployment-marker-figma.svg", actionIcon:"icon-pr-popover-figma.svg" }
         }
       };
       const renderChartEvent = index => {
-        const event = chartEventsByIssue[activeIssue]?.[index];
+        const eventEntry = Object.entries(chartEventsBySidebar[activeSidebarId] || {}).find(([rawIndex]) =>
+          Math.round((Number(rawIndex) / (rawValues.length - 1)) * (values.length - 1)) === index
+        );
+        const event = eventEntry?.[1];
         if (!event) return "";
-        return `<span class="chart-event ${index >= 14 ? "late" : ""}">
+        return `<span class="chart-event ${index >= values.length - 2 ? "late" : ""}">
           <button class="chart-event-icon interactive" aria-label="View ${escapeHtml(event.title)}"><img src="./assets/engine-opportunity-prototype/${event.marker}" alt=""></button>
           <span class="chart-event-popover">
             <span class="chart-event-popover-head">
@@ -2522,11 +2711,7 @@
         </span>`;
       };
       const barsNode = document.getElementById("bars");
-      if (lineMetric) {
-        const dateLabel = index => {
-          const date = new Date(2026, 5, 7 + index);
-          return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-        };
+      if (isLine) {
         const points = values.map((value, index) => {
           const x = (index / (values.length - 1)) * 100;
           const y = 100 - (value / axisMax) * 100;
@@ -2540,15 +2725,16 @@
           ${values.map((value, index) => {
             const x = (index / (values.length - 1)) * 100;
             const y = (value / axisMax) * 100;
-            const date = dateLabel(index);
+            const date = formatScanTime(timestamps[index]);
+            const timestamp = formatScanTime(timestamps[index], true);
             const formattedValue = formatChartValue(value);
             const showLabel = index === 0
               || index === values.length - 1
-              || (index % 2 === 0 && index < values.length - 2);
+              || (index % 4 === 0 && index < values.length - 2);
             const edgeClass = index === 0 ? " first" : index === values.length - 1 ? " last" : "";
             return `<span class="line-point-slot${edgeClass}" style="left:${x.toFixed(2)}%;--point-y:${y.toFixed(2)}%">
               <span class="line-point">
-                <span class="line-point-tooltip">${escapeHtml(date)} · ${escapeHtml(formattedValue)}</span>
+                <span class="line-point-tooltip">${escapeHtml(timestamp)} · ${escapeHtml(formattedValue)}</span>
               </span>
               ${showLabel ? `<span class="line-x-label${edgeClass}">${escapeHtml(date)}</span>` : ""}
               ${renderChartEvent(index)}
@@ -2560,13 +2746,18 @@
         linePlot.querySelectorAll(".line-point-slot").forEach(slot => slot.style.setProperty("--hit-width", `${hitWidth}px`));
       } else {
         barsNode.className = "bars";
-        barsNode.innerHTML = values.map((value, index) => `
+        barsNode.innerHTML = values.map((value, index) => {
+          const showLabel = index === 0
+            || index === values.length - 1
+            || (index % 4 === 0 && index < values.length - 2);
+          return `
           <div class="bar-slot" style="--bar-height:${value === 0 ? 0 : Math.max(4, (value / axisMax) * 100)}%">
-            <span class="bar-tooltip">${value}</span>
-            <div class="bar ${activeIssue === "prompt" && index === 5 ? "event" : ""}" style="height:${value === 0 ? 0 : Math.max(4, (value / axisMax) * 100)}%"></div>
+            <span class="bar-tooltip">${escapeHtml(formatScanTime(timestamps[index], true))} · ${escapeHtml(formatChartValue(value))}</span>
+            <div class="bar" style="height:${value === 0 ? 0 : Math.max(4, (value / axisMax) * 100)}%"></div>
+            ${showLabel ? `<span class="bar-x-label">${escapeHtml(formatScanTime(timestamps[index]))}</span>` : ""}
             ${renderChartEvent(index)}
           </div>
-        `).join("");
+        `}).join("");
       }
       document.querySelectorAll(".chart-event-popover").forEach(popover => {
         const head = popover.querySelector(".chart-event-popover-head");
@@ -2582,17 +2773,7 @@
         }
       });
       const breakdown = document.getElementById("impact-breakdown");
-      if (activeIssue === "auth") {
-        const authBreakdowns = {
-          0: `<strong>${escapeHtml(activeSidebarTraceCount)} traces</strong><span>Each contains at least one ${formatParagraphCode("401 or 403")} from an account tool</span>`,
-          1: "<strong>51 threads</strong><span>Unique thread_id values with at least one affected trace</span>",
-          2: "<strong>Affected tools</strong><span>update_billing_address 31</span><span>update_account_email 22</span><span>replace_payment_method 17</span><span>cancel_subscription 14</span>",
-          3: `<strong>11 false successes</strong><span>Final response claimed completion after the tool returned ${formatParagraphCode("401 or 403")}</span>`
-        };
-        breakdown.innerHTML = authBreakdowns[selectedMetric];
-      } else {
-        breakdown.innerHTML = `<span>Click a metric to update the distribution above.</span>`;
-      }
+      breakdown.innerHTML = `<strong>${escapeHtml(selected.value)} ${escapeHtml(selected.label.toLowerCase())}</strong><span>${escapeHtml(selected.definition)}</span>`;
       document.querySelectorAll(".chart-event-icon.interactive").forEach(icon => {
         const eventNode = icon.closest(".chart-event");
         const popover = eventNode.querySelector(".chart-event-popover");
@@ -3050,7 +3231,7 @@
       document.getElementById("fix-cta").innerHTML = `<img src="./assets/engine-opportunity-prototype/${fixPresentation.icon}" alt=""><span id="fix-cta-label">${escapeHtml(fixPresentation.label)}</span>`;
       document.querySelector('[data-next="evaluator"] .next-action-detail').textContent = actionCopy.track;
       document.querySelector('[data-next="example"] .next-action-detail').textContent = "Review affected cases before adding them.";
-      document.querySelector('[data-next="experiment"] .next-action-detail').textContent = "Review the proposed experiment before running it.";
+      document.querySelector('[data-next="experiment"] .next-action-detail').textContent = "Review proposed experiment";
 
       const codeFixSource = ` def request(self, method, path, **kwargs):
 -    return self.client.request(method, path, **kwargs)
@@ -3433,19 +3614,49 @@
       };
       document.getElementById("controller-close").onclick = () => {
         controller.classList.add("hidden");
+        document.getElementById("setup-dropdown").classList.remove("open");
         toggle.setAttribute("aria-expanded", "false");
       };
-      const setup = document.getElementById("setup-select");
-      setup.value = activeSetup;
-      setup.onchange = () => {
-        activeSetup = setup.value;
-        activeNext = "fix";
-        renderNextSteps();
+      const setupDropdown = document.getElementById("setup-dropdown");
+      const setupTrigger = document.getElementById("setup-trigger");
+      const setupValue = document.getElementById("setup-value");
+      const setupOptions = [...setupDropdown.querySelectorAll("[data-setup]")];
+      const syncSetupDropdown = () => {
+        const selected = setupOptions.find(option => option.dataset.setup === activeSetup);
+        setupValue.textContent = selected.firstChild.textContent;
+        setupOptions.forEach(option => {
+          const isSelected = option === selected;
+          option.classList.toggle("selected", isSelected);
+          option.setAttribute("aria-selected", String(isSelected));
+        });
+      };
+      syncSetupDropdown();
+      setupTrigger.onclick = event => {
+        event.stopPropagation();
+        const open = setupDropdown.classList.toggle("open");
+        setupTrigger.setAttribute("aria-expanded", String(open));
+      };
+      setupOptions.forEach(option => {
+        option.onclick = event => {
+          event.stopPropagation();
+          activeSetup = option.dataset.setup;
+          activeNext = "fix";
+          syncSetupDropdown();
+          setupDropdown.classList.remove("open");
+          setupTrigger.setAttribute("aria-expanded", "false");
+          renderNextSteps();
+        };
+      });
+      const impactContextToggle = document.getElementById("impact-context-toggle");
+      impactContextToggle.checked = showMetricDefinitions;
+      impactContextToggle.onchange = () => {
+        showMetricDefinitions = impactContextToggle.checked;
+        renderImpact(issues[activeIssue]);
       };
       const impactComparisonToggle = document.getElementById("impact-comparison-toggle");
-      impactComparisonToggle.checked = showImpactComparisons;
+      impactComparisonToggle.checked = showBaselineComparisons;
       impactComparisonToggle.onchange = () => {
-        showImpactComparisons = impactComparisonToggle.checked;
+        showBaselineComparisons = impactComparisonToggle.checked;
         renderImpact(issues[activeIssue]);
       };
     }
@@ -3498,9 +3709,18 @@
       triggerRing.className = `status-ring ${activeStatus.toLowerCase().replace(" ", "-")}`;
       document.onclick = event => {
         if (!event.target.closest(".issue-dropdown")) closeAll();
+        if (!event.target.closest(".controller-dropdown")) {
+          const setupDropdown = document.getElementById("setup-dropdown");
+          setupDropdown.classList.remove("open");
+          document.getElementById("setup-trigger").setAttribute("aria-expanded", "false");
+        }
       };
       document.onkeydown = event => {
-        if (event.key === "Escape") closeAll();
+        if (event.key === "Escape") {
+          closeAll();
+          document.getElementById("setup-dropdown").classList.remove("open");
+          document.getElementById("setup-trigger").setAttribute("aria-expanded", "false");
+        }
       };
     }
 
