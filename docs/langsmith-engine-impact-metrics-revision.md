@@ -48,7 +48,7 @@ Use a stable four-part data model:
 
 4. **Confirmed outcomes**
    - The user, business, or security consequence associated with the issue.
-   - Examples: false successes, high-risk claims, completed wrong actions, or data exposures.
+   - Examples: false success responses, high-risk claims, completed wrong actions, or data exposures.
 
 The backend structure can remain consistent while the two adaptive cards use issue-specific labels.
 
@@ -59,9 +59,9 @@ The backend structure can remain consistent while the two adaptive cards use iss
 - Linked traces
 - Unique threads
 - Failed calls
-- False successes
+- False success responses
 
-`False success` means the operation failed, but the final answer claimed or strongly implied that it succeeded. This requires structured operation truth plus a versioned semantic evaluator.
+`False success response` means the operation failed, but the final answer claimed or strongly implied that it succeeded. This requires structured operation truth plus a versioned semantic evaluator.
 
 ### Hallucination
 
@@ -184,7 +184,7 @@ Points must correspond to real scan timestamps or explicitly defined aggregation
 
 Use for outcome composition:
 
-- False success versus other outcomes after a failed call.
+- False success responses versus other outcomes after a failed call.
 - High-risk versus lower-risk unsupported claims.
 - Wrong selections that did versus did not complete an action.
 - Blocked versus failed-open guardrail decisions.

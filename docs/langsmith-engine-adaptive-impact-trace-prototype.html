@@ -1617,7 +1617,7 @@
           ["Evidence", "Linked traces", "63", "", "bad"],
           ["Reach", "Unique threads", "51", "", "bad"],
           ["Detected event", "Failed calls", "84", "", "bad"],
-          ["Confirmed outcome", "False successes", "11", "", "bad"]
+          ["Confirmed outcome", "False success responses", "11", "", "bad"]
         ],
         traceNote: "Showing different account tools failing through the same authentication client, followed by missing recovery and misleading responses.",
         stats: "1 turn · Cluster P50 6.8s · 1.1K tokens · $0.008",
@@ -2232,7 +2232,7 @@
       "Unique threads": "Distinct linked thread IDs",
       "Affected accounts": "Distinct linked accounts",
       "Failed calls": "401/403 tool failures",
-      "False successes": "Failures claimed successful",
+      "False success responses": "Failures claimed successful",
       "Unsupported claims": "Claims lacking source support",
       "High-risk claims": "High-risk unsupported claims",
       "Repeated calls": "Redundant retry calls",
@@ -2270,7 +2270,7 @@
         impactMetric("Linked traces", "63", linkedDefinition, barSeries("Traces per scan", [6,8,9,11,13,16])),
         impactMetric("Unique threads", "51", threadDefinition, barSeries("New threads per scan", [5,7,8,9,10,12])),
         impactMetric("Failed calls", "84", "Tool calls returning an auth failure", barSeries("Failed calls per scan", [8,10,12,15,17,22])),
-        impactMetric("False successes", "11", "Failures followed by a success claim", barSeries("False successes per scan", [1,1,2,2,2,3]))
+        impactMetric("False success responses", "11", "Failures followed by a success claim", barSeries("False success responses per scan", [1,1,2,2,2,3]))
       ], "Production · 6 scans · Jun 7–24"),
       "sidebar-1": impactProfile("looping", impactScanTimes.june, [
         impactMetric("Linked traces", "154", linkedDefinition, barSeries("Traces per scan", [18,22,25,27,29,33])),
@@ -2300,7 +2300,7 @@
         impactMetric("Linked traces", "46", linkedDefinition, barSeries("Traces per scan", [5,6,7,8,9,11])),
         impactMetric("Unique threads", "39", threadDefinition, barSeries("New threads per scan", [4,5,6,7,8,9])),
         impactMetric("Failed calls", "58", "Payment lookups returning failure status", barSeries("Failed calls per scan", [6,8,9,10,11,14])),
-        impactMetric("False successes", "8", "Failures followed by retrieved-data claims", barSeries("False successes per scan", [1,1,1,1,2,2]))
+        impactMetric("False success responses", "8", "Failures followed by retrieved-data claims", barSeries("False success responses per scan", [1,1,1,1,2,2]))
       ], "Production · 6 dynamic scans · Jun 11–29"),
       "sidebar-6": impactProfile("hallucination", impactScanTimes.july, [
         impactMetric("Linked traces", "72", linkedDefinition, barSeries("Traces per scan", [8,10,11,12,14,17])),
@@ -2348,7 +2348,7 @@
         impactMetric("Linked traces", "29", linkedDefinition, barSeries("Traces per scan", [3,4,4,5,6,7])),
         impactMetric("Unique threads", "25", threadDefinition, barSeries("New threads per scan", [3,3,4,4,5,6])),
         impactMetric("Failed calls", "35", "Subscription calls blocked by expired sessions", barSeries("Failed calls per scan", [4,4,5,6,7,9])),
-        impactMetric("False successes", "6", "Failures followed by completion language", barSeries("False successes per scan", [0,1,1,1,1,2]))
+        impactMetric("False success responses", "6", "Failures followed by completion language", barSeries("False success responses per scan", [0,1,1,1,1,2]))
       ], "Production · 6 dynamic scans · Aug 3–27"),
       "sidebar-14": impactProfile("prompt", impactScanTimes.august, [
         impactMetric("Linked traces", "22", linkedDefinition, barSeries("Traces per scan", [2,3,3,4,4,6])),
