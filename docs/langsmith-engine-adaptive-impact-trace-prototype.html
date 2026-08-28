@@ -1029,9 +1029,13 @@
     .metrics.has-impact-context .metric-main { flex-direction: column; align-items: flex-start; gap: 6px; }
     .metrics.has-two-context-lines { height: 112px; }
     .metrics.has-two-context-lines .metric { min-height: 112px; }
+    .metrics.has-three-context-lines { height: 130px; }
+    .metrics.has-three-context-lines .metric { min-height: 130px; }
     .metric-context-lines { display: flex; overflow: hidden; width: 100%; flex-direction: column; gap: 2px; }
     .metrics.has-impact-context .metric-detail { display: block; overflow: hidden; width: 100%; color: #787878; font-size: 10px; font-weight: 400; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
     .metrics.has-impact-context .metric-detail.bad, .metrics.has-impact-context .metric-detail.warn, .metrics.has-impact-context .metric-detail.good { color: #787878; }
+    .metrics.has-impact-context .metric-urgency { color: #d92d20; }
+    .metric-urgency-arrow { margin-right: 3px; font-weight: 600; }
     .chart { grid-template-columns: 42px minmax(0,1fr); min-height: 165px; padding: 20px 0; overflow: visible; border-color: var(--border-subtle); }
     .chart-axis { height: 125px; padding: 0 10px 0 0; justify-content: space-between; font-size: 9px; white-space: nowrap; }
     .bars { height: 125px; gap: 4px; margin: 0; overflow: visible; padding: 0 12px 0 0; border: 0; background: none; }
@@ -1613,6 +1617,11 @@
       <label class="controller-switch-row" for="impact-comparison-toggle">
         <span class="controller-switch-copy">Baseline comparison<small>Comparable traces where defensible.</small></span>
         <input class="controller-switch-input" id="impact-comparison-toggle" type="checkbox">
+        <span class="controller-switch-track" aria-hidden="true"></span>
+      </label>
+      <label class="controller-switch-row" for="impact-urgency-toggle">
+        <span class="controller-switch-copy">Time urgency<small>Show when each impact value increased.</small></span>
+        <input class="controller-switch-input" id="impact-urgency-toggle" type="checkbox">
         <span class="controller-switch-track" aria-hidden="true"></span>
       </label>
     </div>
@@ -2204,6 +2213,7 @@
     let includeBaseline = false;
     let showMetricDefinitions = false;
     let showBaselineComparisons = false;
+    let showTimeUrgency = false;
     let activeSeverity = "High";
     let activeStatus = "To Review";
     let activeSidebarId = "sidebar-0";
@@ -2607,10 +2617,19 @@
       document.getElementById("impact-coverage").textContent = profile.coverage;
       const metricsNode = document.getElementById("metrics");
       const visibleContextCount = Number(showMetricDefinitions)
-        + Number(showBaselineComparisons && metrics.some(metric => metric.baseline));
+        + Number(showBaselineComparisons && metrics.some(metric => metric.baseline))
+        + Number(showTimeUrgency);
       metricsNode.classList.toggle("has-impact-context", visibleContextCount > 0);
       metricsNode.classList.toggle("has-two-context-lines", visibleContextCount > 1);
+      metricsNode.classList.toggle("has-three-context-lines", visibleContextCount > 2);
       metricsNode.innerHTML = metrics.map((metric, index) => {
+        const latestValue = metric.chart.values.at(-1);
+        const previousValue = metric.chart.values.at(-2);
+        const urgencyValue = metric.chart.type === "line"
+          ? `${metric.chart.prefix}${Number(Math.abs(latestValue - previousValue).toFixed(2))}${metric.chart.suffix} increase`
+          : metric.chart.prefix || metric.chart.suffix
+            ? `${metric.chart.prefix}${latestValue}${metric.chart.suffix} recorded`
+            : `${latestValue} added`;
         const contextLines = [
           showMetricDefinitions ? metric.definition : "",
           showBaselineComparisons ? metric.baseline : ""
@@ -2620,7 +2639,10 @@
           <div class="metric-label">${escapeHtml(titleCase(displayMetricLabel(metric.label)))}</div>
           <div class="metric-main">
             <span class="metric-value">${escapeHtml(metric.value)}</span>
-            <span class="metric-context-lines">${contextLines.map(detail => `<span class="metric-detail ${metric.tone}">${escapeHtml(detail)}</span>`).join("")}</span>
+            <span class="metric-context-lines">
+              ${showTimeUrgency ? `<span class="metric-detail metric-urgency"><span class="metric-urgency-arrow" aria-hidden="true">↑</span>${escapeHtml(urgencyValue)}</span>` : ""}
+              ${contextLines.map(detail => `<span class="metric-detail ${metric.tone}">${escapeHtml(detail)}</span>`).join("")}
+            </span>
           </div>
         </button>
       `}).join("");
@@ -3789,6 +3811,12 @@
       impactComparisonToggle.checked = showBaselineComparisons;
       impactComparisonToggle.onchange = () => {
         showBaselineComparisons = impactComparisonToggle.checked;
+        renderImpact(issues[activeIssue]);
+      };
+      const impactUrgencyToggle = document.getElementById("impact-urgency-toggle");
+      impactUrgencyToggle.checked = showTimeUrgency;
+      impactUrgencyToggle.onchange = () => {
+        showTimeUrgency = impactUrgencyToggle.checked;
         renderImpact(issues[activeIssue]);
       };
     }
