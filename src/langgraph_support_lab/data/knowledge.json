@@ -1,0 +1,50 @@
+{
+  "documentation": [
+    {
+      "title": "LangChain v1 migration guide",
+      "excerpt": "Use langchain.agents.create_agent for new agents. The older langgraph.prebuilt.create_react_agent helper is deprecated.",
+      "url": "https://docs.langchain.com/oss/python/migrate/langchain-v1",
+      "keywords": ["create_react_agent", "create_agent", "deprecated", "migration", "v1"]
+    },
+    {
+      "title": "LangGraph persistence",
+      "excerpt": "A checkpointer saves graph state at each super-step. Invocations that should share state must use the same configurable thread_id.",
+      "url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+      "keywords": ["checkpointer", "checkpoint", "thread_id", "persistence", "resume", "state"]
+    },
+    {
+      "title": "LangGraph interrupts",
+      "excerpt": "Interrupts pause graph execution and persist state. Resume the same thread by invoking the graph with Command(resume=value).",
+      "url": "https://docs.langchain.com/oss/python/langgraph/interrupts",
+      "keywords": ["interrupt", "command", "resume", "human", "approval", "thread_id"]
+    }
+  ],
+  "github_issue": [
+    {
+      "title": "Graph resumes from the beginning when thread ID changes",
+      "excerpt": "Resolved by reusing the original thread_id when sending Command(resume=...). A new thread starts a separate checkpoint history.",
+      "url": "https://github.com/langchain-ai/langgraph/issues",
+      "keywords": ["resume", "beginning", "thread_id", "checkpoint", "interrupt"]
+    },
+    {
+      "title": "Import error after upgrading to LangChain v1",
+      "excerpt": "Legacy agent APIs moved to langchain-classic. New agent implementations should import create_agent from langchain.agents.",
+      "url": "https://github.com/langchain-ai/langchain/issues",
+      "keywords": ["import", "agentexecutor", "langchain-classic", "upgrade", "create_agent"]
+    }
+  ],
+  "release_note": [
+    {
+      "title": "LangChain and LangGraph v1",
+      "excerpt": "LangChain v1 introduces create_agent as the standard agent API. It runs on LangGraph and supports middleware, persistence, streaming, and human-in-the-loop.",
+      "url": "https://docs.langchain.com/oss/python/releases/langchain-v1",
+      "keywords": ["v1", "create_agent", "middleware", "persistence", "streaming"]
+    },
+    {
+      "title": "LangGraph v1",
+      "excerpt": "LangGraph v1 keeps the core StateGraph and runtime APIs stable while deprecating the prebuilt create_react_agent helper.",
+      "url": "https://docs.langchain.com/oss/python/releases/langgraph-v1",
+      "keywords": ["langgraph", "v1", "stategraph", "create_react_agent", "deprecated"]
+    }
+  ]
+}

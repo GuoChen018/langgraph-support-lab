@@ -13,10 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import {
-  ArrowLeftBoxSharp,
-  ArrowRightBoxSharp,
-} from "pixelarticons/react";
+import { ArrowLeftBoxSharp, ArrowRightBoxSharp } from "pixelarticons/react";
 import { BrandMark } from "@/components/icons/brand-mark";
 
 function ThreadList({
@@ -36,7 +33,7 @@ function ThreadList({
         </div>
       )}
       {threads.map((t) => {
-        let itemText = t.thread_id;
+        let itemText = "New conversation";
         if (
           typeof t.values === "object" &&
           t.values &&
@@ -45,7 +42,7 @@ function ThreadList({
           t.values.messages?.length > 0
         ) {
           const firstMessage = t.values.messages[0];
-          itemText = getContentString(firstMessage.content);
+          itemText = getContentString(firstMessage.content) || itemText;
         }
         return (
           <div key={t.thread_id} className="w-full">

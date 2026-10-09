@@ -13,6 +13,8 @@ from httpx import HTTPError
 from langgraph_support_lab.state import Evidence
 
 DEFAULT_KNOWLEDGE_PATH = Path(__file__).parents[2] / "data" / "knowledge.json"
+if not DEFAULT_KNOWLEDGE_PATH.is_file():
+    DEFAULT_KNOWLEDGE_PATH = Path(__file__).parent / "data" / "knowledge.json"
 logger = logging.getLogger(__name__)
 
 

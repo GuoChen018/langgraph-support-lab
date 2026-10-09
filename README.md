@@ -95,6 +95,37 @@ pytest
 ruff check .
 ```
 
+## Simulate traffic for Insights
+
+`data/simulation/scenarios.json` contains 60 hand-authored synthetic scenarios,
+each with two user turns. These include common support questions and deliberately
+difficult requests. They are hypotheses for testing, not verified historical incidents.
+
+Preview the mix without sending requests:
+
+```bash
+python scripts/simulate_traffic.py --count 500
+```
+
+Run against an already-running Agent Server with tracing enabled:
+
+```bash
+python scripts/simulate_traffic.py --count 20 --execute \
+  --batch chainsupport-insights-pilot --output ../outputs/simulation-pilot
+```
+
+Each conversation uses a separate thread and sequential turns. Traces carry the
+`synthetic` tag and `simulation_batch` metadata. Results include full conversations,
+run IDs, latency, and review flags. Review flags are not correctness scores.
+The default concurrency of two tests agent behavior, not production capacity.
+Above 60 conversations, weighted repeats approximate frequent repeat contacts;
+500 conversations do not mean 500 distinct support situations.
+
+`langgraph.deploy.json` is a deployment configuration without a local `.env` path.
+It is scaffolding, not a completed production deployment. Configure credentials
+in the hosting secret store and implement authentication and thread isolation
+before exposing the company application.
+
 ## Product investigation
 
 The project will eventually move through:

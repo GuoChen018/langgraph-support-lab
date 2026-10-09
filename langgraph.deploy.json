@@ -1,0 +1,7 @@
+{
+  "$schema": "https://langgra.ph/schema.json",
+  "dependencies": [".", "langchain-openai==1.7.0"],
+  "graphs": {
+    "support_agent": "./src/langgraph_support_lab/graph.py:graph"
+  }
+}

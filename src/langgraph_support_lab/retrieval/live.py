@@ -18,13 +18,8 @@ from langgraph_support_lab.state import Evidence
 logger = logging.getLogger(__name__)
 
 DEFAULT_DOCS_INDEXES = (
-    "https://docs.langchain.com/oss/python/llms.txt",
-    "https://docs.langchain.com/oss/python/langchain/llms.txt",
-    "https://docs.langchain.com/oss/python/langgraph/llms.txt",
-    "https://docs.langchain.com/oss/python/releases/llms.txt",
-    "https://docs.langchain.com/oss/python/migrate/llms.txt",
-    "https://docs.langchain.com/oss/javascript/llms.txt",
-    "https://docs.langchain.com/langsmith/llms.txt",
+    "https://docs.langchain.com/_llms/agent-development-lifecycle/build/python.md",
+    "https://docs.langchain.com/_llms/agent-development-lifecycle/build/type-script.md",
 )
 DEFAULT_GITHUB_REPOS = ("langchain-ai/langchain", "langchain-ai/langgraph")
 STOP_WORDS = {
