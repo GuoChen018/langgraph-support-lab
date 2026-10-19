@@ -1,3 +1,4 @@
+import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.memory import InMemorySaver
 
@@ -295,12 +296,19 @@ def test_import_follow_up_reaches_search_and_model_with_prior_context(monkeypatc
     assert follow_up in user_input
 
 
-def test_explicit_topic_change_clears_prior_issue_and_versions(monkeypatch):
+@pytest.mark.parametrize(
+    "question",
+    [
+        "LangGraph 1.0 fails with an event loop error.",
+        "My agent behaves strangely on LangGraph 1.0.",
+    ],
+)
+def test_explicit_topic_change_clears_prior_issue_and_versions(monkeypatch, question):
     monkeypatch.delenv("MODEL", raising=False)
     graph = build_graph(checkpointer=InMemorySaver(), retrieval_backend=LocalRetrievalBackend())
     config = {"configurable": {"thread_id": "topic-change"}}
     graph.invoke(
-        {"messages": [HumanMessage(content="LangGraph 1.0 fails with an event loop error.")]},
+        {"messages": [HumanMessage(content=question)]},
         config=config,
     )
     result = graph.invoke(
@@ -312,7 +320,7 @@ def test_explicit_topic_change_clears_prior_issue_and_versions(monkeypatch):
         config=config,
     )
 
-    assert "event loop" not in result["issue"]
+    assert question not in result["issue"]
     assert result["versions"] == []
     assert result["awaiting_clarification"] is True
     assert result["missing_fields"] == ["relevant LangChain, LangGraph, and Python versions"]
@@ -342,3 +350,36 @@ def test_partial_clarifications_request_only_remaining_details(monkeypatch):
     assert result["awaiting_clarification"] is False
     assert result["versions"] == ["LangGraph 1.0", "Python 3.12", "Python 3.13"]
     assert result["missing_fields"] == []
+
+
+@pytest.mark.parametrize(
+    ("question", "reply", "versions"),
+    [
+        (
+            "My agent behaves strangely.",
+            "Can you just explain what a checkpoint is",
+            [],
+        ),
+        (
+            "My agent behaves strangely on LangGraph 1.0 and Python 3.12.",
+            "Can you just explain what a checkpoint is",
+            ["LangGraph 1.0", "Python 3.12"],
+        ),
+    ],
+)
+def test_clarification_without_new_details_proceeds_to_synthesis(
+    monkeypatch, question, reply, versions
+):
+    monkeypatch.delenv("MODEL", raising=False)
+    graph = build_graph(checkpointer=InMemorySaver(), retrieval_backend=LocalRetrievalBackend())
+    config = {"configurable": {"thread_id": "unanswered-clarification"}}
+    first = graph.invoke({"messages": [HumanMessage(content=question)]}, config=config)
+    assert first["awaiting_clarification"] is True
+
+    result = graph.invoke({"messages": [HumanMessage(content=reply)]}, config=config)
+
+    assert result["awaiting_clarification"] is False
+    assert "Sources:" in result["response"]
+    assert question in result["issue"]
+    assert reply in result["issue"]
+    assert result["versions"] == versions

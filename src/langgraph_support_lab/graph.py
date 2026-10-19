@@ -125,6 +125,13 @@ def inspect_intake(state: SupportState) -> SupportState:
         if not versions:
             missing.append("relevant LangChain, LangGraph, and Python versions")
 
+    if (
+        continuing
+        and state.get("awaiting_clarification")
+        and not set(missing) < set(state.get("missing_fields", []))
+    ):
+        missing = []
+
     return {
         "intent": intent,
         "issue": issue,
