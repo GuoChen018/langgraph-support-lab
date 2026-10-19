@@ -1,8 +1,11 @@
+import httpx
+import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.memory import InMemorySaver
 
 from langgraph_support_lab.graph import _estimate_confidence, build_graph
 from langgraph_support_lab.knowledge import LocalRetrievalBackend
+from langgraph_support_lab.retrieval.live import LiveRetrievalBackend
 
 
 def test_complete_issue_returns_response_without_interrupt(monkeypatch):
@@ -68,6 +71,105 @@ def test_estimate_confidence_uses_relevance_not_source_count():
 
     assert _estimate_confidence(weak) == "low"
     assert _estimate_confidence(strong) == "high"
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "nothing works. why is this so hard??",
+        "Can you answer anything, or only questions about LangChain?",
+    ],
+)
+def test_generic_word_overlap_does_not_yield_high_confidence(monkeypatch, question):
+    monkeypatch.delenv("MODEL", raising=False)
+
+    def handler(request):
+        if request.url.path == "/search/issues":
+            return httpx.Response(
+                200,
+                json={
+                    "items": [
+                        {
+                            "title": f"Ask anything about why nothing works so far ({number})",
+                            "body": (
+                                "Can you answer questions about this? So why does nothing "
+                                "happen? I only see audio streaming drop, and anything "
+                                "else works."
+                            ),
+                            "state": "open",
+                            "labels": [],
+                            "html_url": f"https://github.com/langchain-ai/langchain/issues/{number}",
+                        }
+                        for number in (1, 2)
+                    ]
+                },
+            )
+        if request.url.path == "/search.json":
+            return httpx.Response(200, json={"topics": [], "posts": []})
+        return httpx.Response(200, text="")
+
+    backend = LiveRetrievalBackend(
+        client=httpx.Client(transport=httpx.MockTransport(handler)),
+        docs_indexes=("https://docs.langchain.com/llms.txt",),
+        github_repos=("langchain-ai/langchain",),
+        forum_base_url="https://forum.langchain.com",
+    )
+    result = build_graph(retrieval_backend=backend).invoke(
+        {"messages": [HumanMessage(content=question)]}
+    )
+
+    assert result["awaiting_clarification"] is False
+    assert result["confidence"] != "high"
+
+
+def test_unsupported_distinctive_terms_downgrade_confidence(monkeypatch):
+    monkeypatch.delenv("MODEL", raising=False)
+
+    class GenericBackend:
+        def search(self, query, source_type, *, limit=3):
+            if source_type not in {"github_issue", "forum"}:
+                return []
+            return [
+                {
+                    "source_type": source_type,
+                    "title": "Exam link not received",
+                    "excerpt": "Does your answer link work? I asked about the exam email.",
+                    "url": f"https://example.com/{source_type}",
+                    "relevance": 0.3,
+                }
+            ]
+
+    result = build_graph(retrieval_backend=GenericBackend()).invoke(
+        {
+            "messages": [
+                HumanMessage(
+                    content=(
+                        "Why does your answer link to a Python guide when I asked about "
+                        "TypeScript interrupts?"
+                    )
+                )
+            ]
+        }
+    )
+
+    assert result["confidence"] != "high"
+
+
+def test_distinctive_issue_keeps_confident_answer(monkeypatch):
+    monkeypatch.delenv("MODEL", raising=False)
+    result = build_graph(retrieval_backend=LocalRetrievalBackend()).invoke(
+        {
+            "messages": [
+                HumanMessage(
+                    content=(
+                        "LangChain 1.0 on Python 3.12 fails with create_react_agent deprecated."
+                    )
+                )
+            ]
+        }
+    )
+
+    assert result["confidence"] in {"medium", "high"}
 
 
 def test_incomplete_issue_requests_and_accepts_clarification(monkeypatch):

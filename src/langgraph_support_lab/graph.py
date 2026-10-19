@@ -9,6 +9,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langgraph.graph import END, START, StateGraph
 
 from langgraph_support_lab.knowledge import RetrievalBackend, search_knowledge
+from langgraph_support_lab.retrieval.live import GENERIC_TERMS
 from langgraph_support_lab.state import Evidence, SupportState
 
 
@@ -253,7 +254,7 @@ def _unsupported_issue_terms(issue: str, evidence: list[Evidence]) -> list[str]:
     issue_terms = {
         token
         for token in re.findall(r"[a-zA-Z][a-zA-Z0-9_.-]{3,}", issue.lower())
-        if token not in ignored
+        if token not in ignored and token.rstrip(".") not in GENERIC_TERMS
     }
     evidence_text = " ".join(
         f"{item['title']} {item['excerpt']}".lower() for item in evidence

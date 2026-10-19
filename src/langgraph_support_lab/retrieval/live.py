@@ -65,6 +65,68 @@ STOP_WORDS = {
     "with",
     "changes",
 }
+GENERIC_TERMS = {
+    "about",
+    "again",
+    "all",
+    "also",
+    "answer",
+    "any",
+    "anyone",
+    "anything",
+    "ask",
+    "asked",
+    "because",
+    "could",
+    "did",
+    "does",
+    "even",
+    "every",
+    "everything",
+    "get",
+    "hard",
+    "have",
+    "help",
+    "here",
+    "just",
+    "know",
+    "link",
+    "me",
+    "need",
+    "not",
+    "nothing",
+    "now",
+    "only",
+    "please",
+    "question",
+    "questions",
+    "really",
+    "should",
+    "so",
+    "some",
+    "something",
+    "still",
+    "that",
+    "there",
+    "they",
+    "thing",
+    "this",
+    "tried",
+    "try",
+    "want",
+    "was",
+    "we",
+    "where",
+    "which",
+    "why",
+    "will",
+    "work",
+    "working",
+    "works",
+    "would",
+    "you",
+    "your",
+}
 
 
 def _tokens(text: str) -> set[str]:
@@ -76,7 +138,7 @@ def _tokens(text: str) -> set[str]:
 
 
 def _relevance(query: str, searchable: str, *, boost: float = 0.0) -> float:
-    query_tokens = _tokens(query)
+    query_tokens = {token for token in _tokens(query) if token.rstrip(".") not in GENERIC_TERMS}
     if not query_tokens:
         return 0.0
     overlap = query_tokens & _tokens(searchable)
