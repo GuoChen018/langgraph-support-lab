@@ -299,10 +299,11 @@ def test_explicit_topic_change_clears_prior_issue_and_versions(monkeypatch):
     monkeypatch.delenv("MODEL", raising=False)
     graph = build_graph(checkpointer=InMemorySaver(), retrieval_backend=LocalRetrievalBackend())
     config = {"configurable": {"thread_id": "topic-change"}}
-    graph.invoke(
-        {"messages": [HumanMessage(content="LangGraph 1.0 fails with an event loop error.")]},
+    first = graph.invoke(
+        {"messages": [HumanMessage(content="LangGraph 1.0 behaves strangely.")]},
         config=config,
     )
+    assert first["awaiting_clarification"] is True
     result = graph.invoke(
         {
             "messages": [
@@ -318,27 +319,20 @@ def test_explicit_topic_change_clears_prior_issue_and_versions(monkeypatch):
     assert result["missing_fields"] == ["relevant LangChain, LangGraph, and Python versions"]
 
 
-def test_partial_clarifications_request_only_remaining_details(monkeypatch):
+def test_clarification_reply_without_error_keywords_reaches_search(monkeypatch):
     monkeypatch.delenv("MODEL", raising=False)
     graph = build_graph(checkpointer=InMemorySaver(), retrieval_backend=LocalRetrievalBackend())
-    config = {"configurable": {"thread_id": "partial-clarification"}}
-    first = graph.invoke(
-        {"messages": [HumanMessage(content="My agent behaves strangely.")]}, config=config
-    )
-    assert len(first["missing_fields"]) == 2
-    partial = graph.invoke(
-        {"messages": [HumanMessage(content="LangGraph 1.0 on Python 3.12.")]}, config=config
-    )
-    assert partial["awaiting_clarification"] is True
-    assert partial["missing_fields"] == ["the observed error or incorrect behavior"]
-    result = graph.invoke(
-        {
-            "messages": [
-                HumanMessage(content="It fails with an event loop error, also on Python 3.13.")
-            ]
-        },
-        config=config,
-    )
+    config = {"configurable": {"thread_id": "clarification-follow-up"}}
+    question = "LangGraph 1.0 / Python 3.12: resume after interrupt says missing thread_id."
+    first = graph.invoke({"messages": [HumanMessage(content=question)]}, config=config)
+    assert first["awaiting_clarification"] is True
+
+    follow_up = "It happens every time I resume."
+    result = graph.invoke({"messages": [HumanMessage(content=follow_up)]}, config=config)
+
     assert result["awaiting_clarification"] is False
-    assert result["versions"] == ["LangGraph 1.0", "Python 3.12", "Python 3.13"]
     assert result["missing_fields"] == []
+    assert "Sources:" in result["response"]
+    assert result["response"] != first["response"]
+    assert result["issue"] == f"{question}\n\nAdditional information:\n{follow_up}"
+    assert result["versions"] == ["LangGraph 1.0", "Python 3.12"]
