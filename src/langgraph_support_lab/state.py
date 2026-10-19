@@ -25,6 +25,7 @@ class SupportState(MessagesState, total=False):
     release_evidence: list[Evidence]
     forum_evidence: list[Evidence]
     evidence: list[Evidence]
+    prior_evidence: list[Evidence]
     diagnosis: str
     confidence: Literal["low", "medium", "high"]
     response: str

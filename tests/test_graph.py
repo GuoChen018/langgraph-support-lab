@@ -342,3 +342,101 @@ def test_partial_clarifications_request_only_remaining_details(monkeypatch):
     assert result["awaiting_clarification"] is False
     assert result["versions"] == ["LangGraph 1.0", "Python 3.12", "Python 3.13"]
     assert result["missing_fields"] == []
+
+
+def test_release_follow_up_retains_answer_and_source_until_topic_change(monkeypatch):
+    monkeypatch.setenv("MODEL", "test-model")
+    model_inputs = []
+    release = {
+        "source_type": "release_note",
+        "title": "LangChain and LangGraph v1",
+        "excerpt": "LangGraph v1 is the latest stable release.",
+        "url": "https://example.com/releases/v1",
+        "relevance": 0.9,
+    }
+
+    class ReleaseBackend:
+        def search(self, query, source_type, *, limit=3):
+            if source_type == "release_note" and "source" not in query and "traces" not in query:
+                return [release]
+            return []
+
+    class RecordingModel:
+        def invoke(self, messages):
+            model_inputs.append(messages)
+            return AIMessage(content="The latest stable release is LangGraph v1.")
+
+    monkeypatch.setattr(
+        "langgraph_support_lab.graph.init_chat_model", lambda name: RecordingModel()
+    )
+    graph = build_graph(checkpointer=InMemorySaver(), retrieval_backend=ReleaseBackend())
+    config = {"configurable": {"thread_id": "release-follow-up"}}
+    first = graph.invoke(
+        {"messages": [HumanMessage(content="What is the latest LangGraph release?")]},
+        config=config,
+    )
+    assert first["evidence"] == [release]
+    assert "Your previous answer" not in model_inputs[0][-1][1]
+
+    follow_up = graph.invoke(
+        {
+            "messages": [
+                HumanMessage(
+                    content="Please include the source and avoid treating old docs as current release data."
+                )
+            ]
+        },
+        config=config,
+    )
+
+    assert follow_up["release_evidence"] == []
+    assert follow_up["evidence"] == [release]
+    assert first["response"] in model_inputs[1][-1][1]
+    assert release["title"] in model_inputs[1][-1][1]
+    assert release["url"] in follow_up["response"]
+
+    changed = graph.invoke(
+        {"messages": [HumanMessage(content="New topic: What are LangSmith traces?")]},
+        config=config,
+    )
+    assert changed["prior_evidence"] == []
+    assert changed["evidence"] == []
+    assert release["url"] not in changed["response"]
+
+
+def test_follow_up_merges_sources_by_url_and_keeps_highest_relevance(monkeypatch):
+    monkeypatch.delenv("MODEL", raising=False)
+
+    class ChangingBackend:
+        def search(self, query, source_type, *, limit=3):
+            if source_type != "release_note":
+                return []
+            follow_up = "Follow-up question" in query
+            return [
+                {
+                    "source_type": source_type,
+                    "title": title,
+                    "excerpt": "LangGraph release notes.",
+                    "url": f"https://example.com/{title}",
+                    "relevance": score,
+                }
+                for title, score in (
+                    [("v1", 0.5), ("migration", 0.9)]
+                    if follow_up
+                    else [("v1", 0.8), ("migration", 0.6)]
+                )
+            ]
+
+    graph = build_graph(checkpointer=InMemorySaver(), retrieval_backend=ChangingBackend())
+    config = {"configurable": {"thread_id": "merge-sources"}}
+    graph.invoke(
+        {"messages": [HumanMessage(content="What is the latest LangGraph release?")]},
+        config=config,
+    )
+    result = graph.invoke(
+        {"messages": [HumanMessage(content="Can you explain the migration?")]}, config=config
+    )
+    assert [(item["title"], item["relevance"]) for item in result["evidence"]] == [
+        ("migration", 0.9),
+        ("v1", 0.8),
+    ]
