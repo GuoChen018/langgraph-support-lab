@@ -1,4 +1,4 @@
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.memory import InMemorySaver
 
 from langgraph_support_lab.graph import _estimate_confidence, build_graph
@@ -221,3 +221,124 @@ def test_learning_question_answers_without_requesting_versions(monkeypatch):
     assert follow_up["intent"] == "learning"
     assert follow_up["awaiting_clarification"] is False
     assert "Follow-up question" in follow_up["issue"]
+
+
+def test_answered_issue_retains_context_and_versions_on_follow_up(monkeypatch):
+    monkeypatch.delenv("MODEL", raising=False)
+    graph = build_graph(checkpointer=InMemorySaver(), retrieval_backend=LocalRetrievalBackend())
+    config = {"configurable": {"thread_id": "async-follow-up"}}
+    question = "LangGraph 1.0 on Python 3.12 fails with an event loop error."
+    first = graph.invoke({"messages": [HumanMessage(content=question)]}, config=config)
+    assert first["awaiting_clarification"] is False
+
+    follow_up = "We call asyncio.run inside an async FastAPI route."
+    result = graph.invoke({"messages": [HumanMessage(content=follow_up)]}, config=config)
+
+    assert question in result["issue"]
+    assert follow_up in result["issue"]
+    assert result["versions"] == ["LangGraph 1.0", "Python 3.12"]
+    assert question in result["symptoms"]
+    assert result["missing_fields"] == []
+    assert result["awaiting_clarification"] is False
+    assert "Sources:" in result["response"]
+
+
+def test_import_follow_up_reaches_search_and_model_with_prior_context(monkeypatch):
+    monkeypatch.setenv("MODEL", "test-model")
+    queries = []
+    model_inputs = []
+
+    class RecordingBackend:
+        def search(self, query, source_type, *, limit=3):
+            queries.append((source_type, query))
+            return [
+                {
+                    "source_type": source_type,
+                    "title": "Agent imports",
+                    "excerpt": "create_agent is imported from langchain.agents.",
+                    "url": f"https://example.com/{source_type}",
+                    "relevance": 0.9,
+                }
+            ]
+
+    class RecordingModel:
+        def invoke(self, messages):
+            model_inputs.append(messages)
+            return AIMessage(content="Use the documented agent import.")
+
+    monkeypatch.setattr(
+        "langgraph_support_lab.graph.init_chat_model", lambda name: RecordingModel()
+    )
+    graph = build_graph(checkpointer=InMemorySaver(), retrieval_backend=RecordingBackend())
+    config = {"configurable": {"thread_id": "import-follow-up"}}
+    question = (
+        "My create_agent import from langgraph.prebuilt fails with an import error "
+        "after an old tutorial. LangChain 1.0, Python 3.13."
+    )
+    graph.invoke({"messages": [HumanMessage(content=question)]}, config=config)
+    queries.clear()
+    model_inputs.clear()
+    follow_up = "Is it the right package?"
+    result = graph.invoke({"messages": [HumanMessage(content=follow_up)]}, config=config)
+
+    assert result["awaiting_clarification"] is False
+    assert {source for source, _ in queries} == {
+        "documentation",
+        "github_issue",
+        "release_note",
+        "forum",
+    }
+    assert all(question in query and follow_up in query for _, query in queries)
+    assert len(model_inputs) == 1
+    user_input = model_inputs[0][-1][1]
+    assert question in user_input
+    assert follow_up in user_input
+
+
+def test_explicit_topic_change_clears_prior_issue_and_versions(monkeypatch):
+    monkeypatch.delenv("MODEL", raising=False)
+    graph = build_graph(checkpointer=InMemorySaver(), retrieval_backend=LocalRetrievalBackend())
+    config = {"configurable": {"thread_id": "topic-change"}}
+    graph.invoke(
+        {"messages": [HumanMessage(content="LangGraph 1.0 fails with an event loop error.")]},
+        config=config,
+    )
+    result = graph.invoke(
+        {
+            "messages": [
+                HumanMessage(content="New topic: My deployment fails with a timeout error.")
+            ]
+        },
+        config=config,
+    )
+
+    assert "event loop" not in result["issue"]
+    assert result["versions"] == []
+    assert result["awaiting_clarification"] is True
+    assert result["missing_fields"] == ["relevant LangChain, LangGraph, and Python versions"]
+
+
+def test_partial_clarifications_request_only_remaining_details(monkeypatch):
+    monkeypatch.delenv("MODEL", raising=False)
+    graph = build_graph(checkpointer=InMemorySaver(), retrieval_backend=LocalRetrievalBackend())
+    config = {"configurable": {"thread_id": "partial-clarification"}}
+    first = graph.invoke(
+        {"messages": [HumanMessage(content="My agent behaves strangely.")]}, config=config
+    )
+    assert len(first["missing_fields"]) == 2
+    partial = graph.invoke(
+        {"messages": [HumanMessage(content="LangGraph 1.0 on Python 3.12.")]}, config=config
+    )
+    assert partial["awaiting_clarification"] is True
+    assert partial["missing_fields"] == ["the observed error or incorrect behavior"]
+    result = graph.invoke(
+        {
+            "messages": [
+                HumanMessage(content="It fails with an event loop error, also on Python 3.13.")
+            ]
+        },
+        config=config,
+    )
+    assert result["awaiting_clarification"] is False
+    assert result["versions"] == ["LangGraph 1.0", "Python 3.12", "Python 3.13"]
+    assert result["missing_fields"] == []
