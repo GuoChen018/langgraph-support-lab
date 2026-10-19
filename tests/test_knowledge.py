@@ -2,7 +2,7 @@ import httpx
 
 from langgraph_support_lab import knowledge
 from langgraph_support_lab.knowledge import LocalRetrievalBackend, search_knowledge
-from langgraph_support_lab.retrieval.live import LiveRetrievalBackend
+from langgraph_support_lab.retrieval.live import LiveRetrievalBackend, _relevance
 
 
 def test_search_returns_relevant_documentation():
@@ -25,6 +25,24 @@ def test_search_returns_empty_for_unrelated_query():
     )
 
     assert results == []
+
+
+def test_relevance_ignores_generic_word_overlap():
+    unrelated = (
+        "Streaming drops the audio payload, so nothing reaches the aggregated message. "
+        "Why a guard seems worth it: the failure is silent."
+    )
+
+    assert _relevance("nothing works. why is this so hard??", unrelated) < 0.18
+
+
+def test_relevance_scores_distinctive_query_anchor_matches():
+    score = _relevance(
+        "LangGraph interrupt fails to resume because thread_id changes",
+        "Reuse the same thread_id when you resume an interrupted graph.",
+    )
+
+    assert score >= 0.27
 
 
 def test_live_docs_fetches_ranked_markdown_and_caches_requests():

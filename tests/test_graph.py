@@ -1,8 +1,10 @@
+import httpx
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.memory import InMemorySaver
 
 from langgraph_support_lab.graph import _estimate_confidence, build_graph
 from langgraph_support_lab.knowledge import LocalRetrievalBackend
+from langgraph_support_lab.retrieval.live import LiveRetrievalBackend
 
 
 def test_complete_issue_returns_response_without_interrupt(monkeypatch):
@@ -56,18 +58,156 @@ def test_out_of_corpus_issue_gets_low_confidence(monkeypatch):
 
 
 def test_estimate_confidence_uses_relevance_not_source_count():
+    issue = "LangGraph interrupt fails to resume because thread_id changes"
     weak = [
         {"source_type": "documentation", "relevance": 0.13, "title": "a", "excerpt": "", "url": ""},
         {"source_type": "github_issue", "relevance": 0.05, "title": "b", "excerpt": "", "url": ""},
         {"source_type": "release_note", "relevance": 0.12, "title": "c", "excerpt": "", "url": ""},
     ]
     strong = [
-        {"source_type": "documentation", "relevance": 0.3, "title": "a", "excerpt": "", "url": ""},
-        {"source_type": "github_issue", "relevance": 0.2, "title": "b", "excerpt": "", "url": ""},
+        {
+            "source_type": "documentation",
+            "relevance": 0.3,
+            "title": "Persistence",
+            "excerpt": "Reuse the same thread_id to continue a graph.",
+            "url": "",
+        },
+        {
+            "source_type": "github_issue",
+            "relevance": 0.2,
+            "title": "Interrupt resume ignores a changed thread_id",
+            "excerpt": "",
+            "url": "",
+        },
     ]
 
-    assert _estimate_confidence(weak) == "low"
-    assert _estimate_confidence(strong) == "high"
+    assert _estimate_confidence(weak, issue) == "low"
+    assert _estimate_confidence(strong, issue) == "high"
+
+
+def test_estimate_confidence_is_not_high_for_vague_issue_with_unrelated_evidence():
+    unrelated = [
+        {
+            "source_type": "github_issue",
+            "relevance": 0.332,
+            "title": title,
+            "excerpt": "Nothing reaches the aggregated result, so callers see stale data.",
+            "url": f"https://github.com/example/repo/issues/{index}",
+        }
+        for index, title in enumerate(
+            [
+                "Streaming drops the audio payload",
+                "Expose prompt templates to model callbacks",
+                "Cache namespace collapses for non-function callables",
+            ]
+        )
+    ]
+
+    confidence = _estimate_confidence(unrelated, "nothing works. why is this so hard??")
+
+    assert confidence != "high"
+    assert confidence == "low"
+
+
+def test_estimate_confidence_requires_query_anchored_evidence_for_high():
+    issue = (
+        "After upgrading, create_react_agent fails with a deprecated API error "
+        "on python 3.13 in production."
+    )
+    unanchored = [
+        {
+            "source_type": "documentation",
+            "relevance": 0.4,
+            "title": "Streaming responses",
+            "excerpt": "Stream tokens from chat models in production.",
+            "url": "https://example.com/streaming",
+        },
+        {
+            "source_type": "forum",
+            "relevance": 0.35,
+            "title": "Upgrading to Python 3.13",
+            "excerpt": "Reinstall packages after upgrading Python.",
+            "url": "https://example.com/forum",
+        },
+    ]
+
+    assert _estimate_confidence(unanchored, issue) == "medium"
+
+
+def test_unsupported_issue_terms_still_downgrade_anchored_confidence(monkeypatch):
+    monkeypatch.delenv("MODEL", raising=False)
+
+    class AnchoredBackend:
+        def search(self, query, source_type, *, limit=3):
+            if source_type != "documentation":
+                return []
+            return [
+                {
+                    "source_type": "documentation",
+                    "relevance": relevance,
+                    "title": f"create_agent reference {index}",
+                    "excerpt": "create_agent builds an agent graph.",
+                    "url": f"https://example.com/create-agent-{index}",
+                }
+                for index, relevance in enumerate([0.35, 0.3])
+            ]
+
+    result = build_graph(retrieval_backend=AnchoredBackend()).invoke(
+        {
+            "messages": [
+                HumanMessage(
+                    content=(
+                        "My create_agent deployment fails with a timeout behind a kubernetes "
+                        "ingress gateway. LangChain 1.0, Python 3.13."
+                    )
+                )
+            ]
+        }
+    )
+
+    assert result["confidence"] == "medium"
+
+
+def test_vague_complaint_asks_for_details_instead_of_citing_unrelated_issue(monkeypatch):
+    monkeypatch.delenv("MODEL", raising=False)
+    unrelated_title = "Streaming drops the audio payload, so a streamed turn cannot be continued"
+
+    def handler(request):
+        if request.url.path == "/search/issues":
+            return httpx.Response(
+                200,
+                json={
+                    "items": [
+                        {
+                            "title": unrelated_title,
+                            "body": (
+                                "Nothing of the audio reaches the aggregated message. "
+                                "Why a guard seems worth it: the failure is silent."
+                            ),
+                            "state": "open",
+                            "labels": [{"name": "bug"}],
+                            "html_url": "https://github.com/langchain-ai/langchain/issues/1",
+                        }
+                    ]
+                },
+            )
+        if request.url.path == "/search.json":
+            return httpx.Response(200, json={"topics": [], "posts": []})
+        return httpx.Response(200, text="")
+
+    backend = LiveRetrievalBackend(
+        client=httpx.Client(transport=httpx.MockTransport(handler)),
+        docs_indexes=("https://docs.langchain.com/llms.txt",),
+        github_repos=("langchain-ai/langchain",),
+        forum_base_url="https://forum.langchain.com",
+    )
+    result = build_graph(retrieval_backend=backend).invoke(
+        {"messages": [HumanMessage(content="nothing works. why is this so hard??")]}
+    )
+
+    assert result["confidence"] != "high"
+    assert unrelated_title not in result["response"]
+    assert "try naming the specific" in result["response"].lower()
 
 
 def test_incomplete_issue_requests_and_accepts_clarification(monkeypatch):

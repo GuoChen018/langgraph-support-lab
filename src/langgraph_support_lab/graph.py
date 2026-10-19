@@ -9,7 +9,10 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langgraph.graph import END, START, StateGraph
 
 from langgraph_support_lab.knowledge import RetrievalBackend, search_knowledge
+from langgraph_support_lab.retrieval.live import _query_anchors, _tokens
 from langgraph_support_lab.state import Evidence, SupportState
+
+_LOWER_CONFIDENCE = {"high": "medium", "medium": "low", "low": "low"}
 
 
 def _extract_versions(text: str) -> list[str]:
@@ -210,12 +213,8 @@ def _collect_evidence(state: SupportState) -> list[Evidence]:
     return sorted(by_url.values(), key=lambda item: item["relevance"], reverse=True)
 
 
-def _estimate_confidence(evidence: list[Evidence]) -> str:
-    """Score confidence from evidence relevance, not from source-type count.
-
-    Weak keyword hits across many sources previously produced false "high"
-    confidence for out-of-corpus questions (e.g. Redis/Helm).
-    """
+def _estimate_confidence(evidence: list[Evidence], issue: str) -> str:
+    """Score confidence from relevance, query-anchored evidence, and issue specificity."""
     if not evidence:
         return "low"
 
@@ -227,10 +226,22 @@ def _estimate_confidence(evidence: list[Evidence]) -> str:
     second = ranked[1] if len(ranked) > 1 else 0.0
 
     if best >= 0.27 and second >= 0.2:
-        return "high"
-    if best >= 0.2:
-        return "medium"
-    return "low"
+        confidence = "high"
+    elif best >= 0.2:
+        confidence = "medium"
+    else:
+        return "low"
+
+    anchors = _query_anchors(issue)
+    anchored_items = sum(
+        any(anchor in f"{item['title']} {item['excerpt']}".lower() for anchor in anchors)
+        for item in evidence
+    )
+    if confidence == "high" and anchored_items < 2:
+        confidence = "medium"
+    if not anchors and len(_tokens(issue)) < 4:
+        confidence = _LOWER_CONFIDENCE[confidence]
+    return confidence
 
 
 def _unsupported_issue_terms(issue: str, evidence: list[Evidence]) -> list[str]:
@@ -270,8 +281,8 @@ def _reported_error(issue: str) -> str | None:
     return match.group(1).strip() if match else None
 
 
-def _deterministic_diagnosis(evidence: list[Evidence]) -> tuple[str, str]:
-    confidence = _estimate_confidence(evidence)
+def _deterministic_diagnosis(evidence: list[Evidence], issue: str) -> tuple[str, str]:
+    confidence = _estimate_confidence(evidence, issue)
     if not evidence or confidence == "low":
         return (
             (
@@ -291,7 +302,7 @@ def _deterministic_diagnosis(evidence: list[Evidence]) -> tuple[str, str]:
 def synthesize(state: SupportState) -> SupportState:
     evidence = _collect_evidence(state)
     intent = state.get("intent", "troubleshooting")
-    confidence = _estimate_confidence(evidence)
+    confidence = _estimate_confidence(evidence, state["issue"])
     unsupported_terms = _unsupported_issue_terms(state["issue"], evidence)
     issue_term_count = len(_unsupported_issue_terms(state["issue"], []))
     best_relevance = max((item["relevance"] for item in evidence), default=0.0)
@@ -300,7 +311,7 @@ def synthesize(state: SupportState) -> SupportState:
         and issue_term_count
         and len(unsupported_terms) / issue_term_count >= 0.4
     ):
-        confidence = {"high": "medium", "medium": "low", "low": "low"}[confidence]
+        confidence = _LOWER_CONFIDENCE[confidence]
     model_name = os.getenv("MODEL")
     task_instruction = (
         (
@@ -360,6 +371,9 @@ def synthesize(state: SupportState) -> SupportState:
                         "Address the developer directly when useful and explain the reasoning "
                         "behind requested checks. "
                         "State uncertainty explicitly and do not invent APIs. "
+                        "If the user's message does not describe a specific error or behavior, "
+                        "do not attribute it to any particular issue in the evidence; ask what "
+                        "is failing. "
                         f"Calibrated confidence for this evidence set is '{confidence}'. "
                         + confidence_instruction
                     ),
@@ -379,7 +393,7 @@ def synthesize(state: SupportState) -> SupportState:
         )
         diagnosis = str(message.content)
     else:
-        diagnosis, _ = _deterministic_diagnosis(evidence)
+        diagnosis, _ = _deterministic_diagnosis(evidence, state["issue"])
         if intent == "learning" and evidence:
             strongest = evidence[:3]
             findings = " ".join(item["excerpt"] for item in strongest)
