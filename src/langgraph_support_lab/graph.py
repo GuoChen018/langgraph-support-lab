@@ -94,17 +94,29 @@ def inspect_intake(state: SupportState) -> SupportState:
         ),
         "",
     )
-    intent = _classify_intent(latest_human)
-    if state.get("awaiting_clarification"):
-        intent = "troubleshooting"
-        issue = f"{state.get('issue', '')}\n\nAdditional information:\n{latest_human}"
-    elif intent == "learning" and state.get("intent") == "learning" and state.get("issue"):
-        issue = f"{state['issue']}\n\nFollow-up question:\n{latest_human}"
+    topic_change = re.match(
+        r"^\s*(?:new (?:topic|issue|question)|different (?:topic|issue|question)|"
+        r"(?:let['’]s )?(?:change|switch) (?:the )?(?:topics?)\b|"
+        r"unrelated (?:question|issue))\b\s*[:.!?,-]?\s*",
+        latest_human,
+        flags=re.IGNORECASE,
+    )
+    current_message = latest_human[topic_change.end() :] if topic_change else latest_human
+    continuing = bool(state.get("issue")) and not topic_change
+    if continuing:
+        label = (
+            "Additional information"
+            if state.get("awaiting_clarification")
+            else "Follow-up question"
+        )
+        issue = f"{state['issue']}\n\n{label}:\n{current_message}"
     else:
-        issue = latest_human
+        issue = current_message
+    intent = _classify_intent(issue)
 
     lower = issue.lower()
-    versions = _extract_versions(issue)
+    prior_versions = state.get("versions", []) if continuing else []
+    versions = list(dict.fromkeys(prior_versions + _extract_versions(current_message)))
     missing: list[str] = []
 
     if intent == "troubleshooting":
@@ -118,7 +130,7 @@ def inspect_intake(state: SupportState) -> SupportState:
         "issue": issue,
         "versions": versions,
         "symptoms": [line.strip() for line in issue.splitlines() if line.strip()],
-        "missing_fields": [] if state.get("awaiting_clarification") else missing,
+        "missing_fields": missing,
         "awaiting_clarification": False,
         "documentation_evidence": [],
         "github_evidence": [],
