@@ -342,3 +342,96 @@ def test_partial_clarifications_request_only_remaining_details(monkeypatch):
     assert result["awaiting_clarification"] is False
     assert result["versions"] == ["LangGraph 1.0", "Python 3.12", "Python 3.13"]
     assert result["missing_fields"] == []
+
+
+def test_learning_follow_ups_retain_sources_and_previous_answers(monkeypatch):
+    monkeypatch.setenv("MODEL", "test-model")
+    queries = []
+    model_inputs = []
+    question = "What is the latest LangGraph version?"
+    original_source = {
+        "source_type": "documentation",
+        "title": "LangGraph v1",
+        "excerpt": "LangGraph v1 is generally available.",
+        "url": "https://docs.langchain.com/oss/python/releases/langgraph-v1",
+        "relevance": 0.9,
+    }
+    unrelated_release = {
+        "source_type": "release_note",
+        "title": "Deep Agents changelog",
+        "excerpt": "Deep Agents v0.6.0 is available.",
+        "url": "https://example.com/deep-agents/changelog",
+        "relevance": 0.8,
+    }
+
+    class RecordingBackend:
+        def search(self, query, source_type, *, limit=3):
+            queries.append((source_type, query))
+            if query == question and source_type == "documentation":
+                return [original_source]
+            if query != question and source_type == "release_note":
+                return [unrelated_release]
+            return []
+
+    class RecordingModel:
+        def invoke(self, messages):
+            model_inputs.append(messages)
+            return AIMessage(content=f"Supported answer {len(model_inputs)}: LangGraph v1.")
+
+    monkeypatch.setattr(
+        "langgraph_support_lab.graph.init_chat_model", lambda name: RecordingModel()
+    )
+    graph = build_graph(checkpointer=InMemorySaver(), retrieval_backend=RecordingBackend())
+    config = {"configurable": {"thread_id": "version-follow-ups"}}
+    result = graph.invoke({"messages": [HumanMessage(content=question)]}, config=config)
+    assert "Your previous answer in this conversation:" not in model_inputs[-1][-1][1]
+    assert result["evidence"] == [original_source]
+
+    follow_ups = ["Please include a source.", "Use current release data.", "Can you verify it?"]
+    for follow_up in follow_ups:
+        previous_response = result["response"]
+        queries.clear()
+        result = graph.invoke({"messages": [HumanMessage(content=follow_up)]}, config=config)
+        assert len(queries) == 4
+        assert all(query == f"{question}\n\n{follow_up}" for _, query in queries)
+        assert original_source in result["evidence"]
+        assert unrelated_release in result["evidence"]
+        assert result["evidence"].count(original_source) == 1
+        user_input = model_inputs[-1][-1][1]
+        assert f"Your previous answer in this conversation:\n{previous_response}" in user_input
+        assert original_source["url"] in user_input
+        assert unrelated_release["excerpt"] in user_input
+        system_input = model_inputs[-1][0][1]
+        assert (
+            "Attribute each version number only to the product the evidence names; "
+            "do not infer a package's latest version from another package's changelog."
+        ) in system_input
+        assert "explicitly explain the correction" in system_input
+
+    result = graph.invoke(
+        {"messages": [HumanMessage(content="New topic: What is LangSmith?")]}, config=config
+    )
+    assert original_source not in result["evidence"]
+
+
+def test_search_uses_original_question_and_latest_clarification():
+    from langgraph_support_lab.graph import _search_node
+
+    queries = []
+
+    class RecordingBackend:
+        def search(self, query, source_type, *, limit=3):
+            queries.append(query)
+            return []
+
+    search = _search_node("documentation", "documentation_evidence", RecordingBackend())
+    search(
+        {
+            "issue": (
+                "My LangGraph agent fails.\n\nAdditional information:\nPython 3.12."
+                "\n\nFollow-up question:\nWhere is the source?"
+                "\n\nAdditional information:\nThe error is a timeout."
+            )
+        }
+    )
+    assert queries == ["My LangGraph agent fails.\n\nThe error is a timeout."]
