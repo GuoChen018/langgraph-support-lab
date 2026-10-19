@@ -959,7 +959,7 @@
     .chrome-button.primary { border-color: var(--brand-500); background: var(--brand-400); color: #fff; }
     .chrome-button:hover { background: #fafbfd; }
     .chrome-button.primary:hover { border-color: transparent; background: #1566b8; }
-    .workspace-body { display: grid; width: 100%; grid-template-columns: 357px minmax(0, 1079px); justify-content: start; }
+    .workspace-body { display: grid; width: 100%; grid-template-columns: 357px minmax(0, 1fr); justify-content: start; }
     .issues-sidebar { position: sticky; top: 132px; display: flex; height: calc(100vh - 132px); min-height: 0; flex-direction: column; overflow: hidden; border-right: 1px solid var(--border-subtle); background: #fff; padding: 16px; }
     .issues-sidebar-head { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .issues-title { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; }
@@ -986,7 +986,7 @@
     .issue-list-meta-left { display: flex; align-items: center; gap: 6px; }
     .issue-type-chip { padding: 4px 6px; border-radius: 4px; background: #e2f4ff; color: #16324f; font-size: 12px; font-weight: 500; line-height: 1.2; }
     .issue-count, .issue-age { color: var(--text-tertiary); font-size: 12px; }
-    .page { width: 1079px; max-width: 100%; min-width: 0; margin: 0; padding: 0 0 80px; border-right: 1px solid var(--border-subtle); background: #fff; }
+    .page { width: 100%; max-width: 100%; min-width: 0; margin: 0; padding: 0 0 80px; border-right: 1px solid var(--border-subtle); background: #fff; }
     .issue-header { position: sticky; top: 132px; z-index: 20; display: block; padding: 20px 24px; border: 0; border-bottom: 1px solid var(--border-subtle); border-radius: 0; background: rgba(255,255,255,.98); backdrop-filter: blur(8px); }
     .issue-title-row { display: flex; align-items: center; gap: 8px; }
     .issue-header h1 { font-size: 18px; line-height: 1.2; letter-spacing: -.04em; }
@@ -1382,7 +1382,7 @@
       .issues-sidebar { top: 96px; height: calc(100vh - 96px); }
       .issue-header { top: 96px; }
     }
-    @media (max-width: 1180px) { .issues-sidebar { display: none; } .workspace-body { grid-template-columns: minmax(0, 1079px); } .project-actions .chrome-button:not(.primary) { display: none; } }
+    @media (max-width: 1180px) { .issues-sidebar { display: none; } .workspace-body { grid-template-columns: minmax(0, 1fr); } .project-actions .chrome-button:not(.primary) { display: none; } }
     @media (max-width: 680px) {
       .global-nav { display: none; }
       .app-main { margin-left: 0; }
